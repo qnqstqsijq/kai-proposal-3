@@ -608,7 +608,7 @@ STMT_SHAPES = {
     "Private by design": "dust>padlock",
     "Custody and security": "keyparts>shield",
     "The fee is part of the move.": "feering",            # its own scene: the move as a ring, the fee a slice of it
-    "Humans retain control. Agents execute.": "dust>ring",
+    "Humans retain control. Agents execute.": "limits",             # its own scene: agents at work inside your limits
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
 }
@@ -694,6 +694,9 @@ def s_flow(s, level):
     out = []
     for i, sc in enumerate(scr):
         body = ""
+        if sc.get("msgs"):          # chat lines: ("me", text) from you, ("agent", text) from Kai's agent
+            body += '<div class="ui__msgs">' + "".join(f'<div class="ui__msg{" ui__msg--me" if w == "me" else ""} flow__msg" style="--d:{.2 + j * .45:g}s">{esc(t)}</div>'
+                                                   for j, (w, t) in enumerate(sc["msgs"])) + '</div>'
         if sc.get("total"):
             a, b2, pre = sc["total"]
             body += f'<b class="ui__total" data-from="{a}" data-to="{b2}" data-pre="{esc(pre)}">{esc(pre)}{a:,.2f}</b>'
@@ -714,7 +717,10 @@ def s_flow(s, level):
             body += f'<div class="ui__btn flow__btn"><span>{esc(sc["btn"])}</span><span class="flow__done">{esc(sc.get("done", "Done"))}</span></div>'
         out.append(f'<div class="flow__scr" data-s="{i + 1}"><div class="ui__top"><span>{esc(sc["title"])}</span><span class="ui__chip">{esc(sc["chip"])}</span></div>{body}</div>')
     ui = f'<div class="ui flow__ui">{"".join(out)}</div>'          # bottom-right corner, like the other frames
-    if s.get("clip"):    # the frame's own video, with the cube footage and shade like every other frame
+    if s.get("still"):   # a still for now (video later), with the cube footage and shade like every other frame
+        stage = (f'<div class="stage"><img class="stage__img" data-par src="{s["still"]}" alt="" loading="lazy" data-photo>'
+                 f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>{ui}</div>')
+    elif s.get("clip"):  # the frame's own video, with the cube footage and shade like every other frame
         stage = (f'<div class="stage"><video class="stage__img" data-par src="{s["clip"]}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
                  f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>{ui}</div>')
     else:                # plain dark teal box until a video is chosen
@@ -722,7 +728,10 @@ def s_flow(s, level):
     lis = "".join(f'<li class="kstory__step" data-i="{i + 1}"><h3>{esc(t)}</h3><p>{esc(d)}</p></li>' for i, (t, d) in enumerate(steps))
     return (f'<section class="kstory kstory--flow" data-story data-k="1" style="--n:{n}"><div class="kstory__pin"><div class="wrap kstory__grid">'
             f'<div class="kstory__vis">{stage}</div>'
-            f'<div class="kstory__text"><h2 class="h2">{esc(s["h2"])}</h2><ol class="kkstory__steps">{lis}</ol></div>'
+            f'<div class="kstory__text"><h2 class="h2">{esc(s["h2"])}</h2>'
+            + (f'<p class="lead">{esc(s["lead"])}</p>' if s.get("lead") else "")
+            + f'<ol class="kkstory__steps">{lis}</ol>'
+            + (f'<p class="kstory__note">{esc(s["line"])}</p>' if s.get("line") else "") + '</div>'
             '</div></div></section>')
 
 # Spread: the homepage "Your money lives in too many places." scene. Centred heading and text; the same eight account

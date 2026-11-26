@@ -1450,3 +1450,11 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 /* "The fee is part of the move.": the ring scene takes the open left half, clear of the text on the right */
 .stmt .pglobe[data-shape="feering"]{left:0!important;right:auto!important;width:50%!important}
 @media (max-width:900px){.stmt .pglobe[data-shape="feering"]{width:auto!important}}
+
+/* flow widget chat lines come in one after another */
+.flow__scr .flow__msg{opacity:0}
+.flow__scr.is-on .flow__msg{animation:storyIn .7s cubic-bezier(.22,1,.36,1) var(--d,0s) both}
+@media (max-width:1100px){.flow__scr .flow__msg{opacity:1;animation:none}}
+/* "Humans retain control. Agents execute.": the limits scene takes the open left half, clear of the text */
+.stmt .pglobe[data-shape="limits"]{left:0!important;right:auto!important;width:50%!important}
+@media (max-width:900px){.stmt .pglobe[data-shape="limits"]{width:auto!important}}

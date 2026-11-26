@@ -114,7 +114,9 @@ PAGES["H-04"] = dict(level=3,
     title="Why Kai | One account. Built for agents. You approve.",
     desc="Why Kai platform: one account for fiat, crypto, stablecoins and stocks, where AI agents act on your behalf and you approve every sensitive move.",
     sections=[
-        dict(t="hero", variant="sub", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
+        # pinned header like Business overview: the image fills the screen, then draws back into the frame on the right,
+        # where the panel comes in, centred (still for now, video later)
+        dict(t="hero", variant="pin", ui_center=True, image="/assets/media/whykai-hero.jpg", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
              sub="We're building one place for your money, and the infrastructure through which AI agents act on your behalf. Humans retain control. Agents execute.",
              buttons=[WAIT],
              visual=dict(photo="/assets/media/04-ai-m.jpg", eager=True, title="One balance", chip="Waiting for you",
@@ -128,13 +130,27 @@ PAGES["H-04"] = dict(level=3,
             ("agent", "Agent access", "Kai's built-in agent is designed to prepare payments and moves for you. Later, connect an agent you already use. An agent connects once to Kai platform, not to every provider."),
             ("shield", "Control by design", "You set the permissions. Every sensitive move waits for your yes."),
         ], line=AGENT_LINE),
-        dict(t="steps", h2="The workflow is the point.",
+        # scroll-driven like Business accounts › Receive, hold and move: each step plays its action in the widget
+        # (still in the frame for now, video later)
+        dict(t="flow", h2="The workflow is the point.",   # frame: plain dark teal until its image is chosen (still="/assets/media/whykai-flow.jpg")
              lead="The point is not a longer list of tools. It is one flow: you set the goal, an agent prepares the move, you see the rate and fees, and you approve.",
-             items=[
+             steps=[
                 ("You set the goal", "Pay an approved supplier within budget."),
                 ("The agent prepares", "It checks balances and proposes how to fund the payment."),
                 ("You confirm", "You review the amount, route and fees, and approve in Kai platform."),
                 ("It goes out", "The payment is sent through Kai platform's payment providers."),
+             ], screens=[
+                dict(title="Kai agent", chip="Your goal", msgs=[("me", "Pay Nordlicht GmbH's invoice. Keep it within this month's budget."),
+                                                                 ("agent", "On it. Nordlicht GmbH is an approved supplier. Budget left: €5,000.00.")]),
+                dict(title="Kai agent", chip="Preparing", rows=[
+                    ("✓", "Invoice checked", "Nordlicht GmbH · INV-2041", "€4,280.00"),
+                    ("✓", "Balances checked", "EUR €3,120.00 · USDC 6,400.00", ""),
+                    ("→", "Proposed funding", "€3,120.00 from EUR, rest from USDC", "")]),
+                dict(title="Review and approve", chip="Rate and fees first", conv=("You pay", "€3,120.00 + 1,262.40 USDC", "EUR + USDC", "They receive", "€4,280.00", "EUR"),
+                     kv=[("Rate", "1 USDC = €0.9237"), ("Fee", "€4.90"), ("Within budget", "Yes")], btn="Approve", done="Approved ✓"),
+                dict(title="Payment", chip="Sent", total=(4280.00, 4280.00, "€"), rows=[
+                    ("✓", "Sent to Nordlicht GmbH", "SEPA · arrives today", ""),
+                    ("✓", "Budget left this month", "", "€720.00")]),
              ], line="A budget or permission never replaces your confirmation of a transfer."),
         dict(t="cards", feat=True, h2="Everything your money needs. In one place.",
              items=[x if x[1] != "Stocks" else ("chart", "Stocks", "US-listed stocks in the same account, next to the rest of your money.") for x in FEATURES],
