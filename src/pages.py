@@ -13,9 +13,15 @@ PAGES["P-01"] = dict(
     title="Kai Personal | One account for all your money",
     desc="Fiat, crypto, stablecoins, stocks and cards in one Kai account, with one balance and agents designed to act within your rules.",
     sections=[
-        dict(t="hero", variant="main", eyebrow="Kai Personal", h1="One account for all your money",
+        # pinned header like Business overview: the video fills the screen, then draws back into the frame on the right,
+        # where the balance panel comes in, centred
+        dict(t="hero", variant="pin", ui_center=True, image="/assets/media/personal-hero.jpg",   # still for now, video later
+             eyebrow="Kai Personal", h1="One account for all your money",
              sub="Fiat, crypto, stablecoins, stocks and cards, with one balance. Agents are designed to act for you, within your rules.",
-             buttons=[("Become the First", "waitlist")], visual="dashboard"),
+             buttons=[("Become the First", "waitlist")],
+             visual=dict(title="Total balance", chip="All balances", total=("€", "16825.40", "€16,825.40"),
+                         rows=[("€", "Fiat", "EUR, GBP", "€6,240.10"), ("₿", "Crypto", "BTC, ETH", "€5,310.75"),
+                               ("◎", "Stablecoins", "USDT, USDC", "€2,904.55"), ("↗", "Stocks", "US-listed", "€2,370.00")])),
         dict(t="tiles", h2="Everything in one place", items=[
             ("account", "Accounts", "EUR and GBP IBANs to start, more currencies to come.", "/personal/accounts/"),
             ("card", "Cards", "Virtual cards funded from your balances.", "/personal/cards/"),
@@ -26,10 +32,10 @@ PAGES["P-01"] = dict(
         ]),
         dict(t="split", h2="Hold one thing. Pay with another.",
              body="Hold crypto and pay a bill in euros. The rate and fees are shown before you confirm.",
-             cta=("How Move Money works", "/personal/move-money/"), visual="convert"),
-        dict(t="cards2", h2="Made for you", items=[
-            ("Kai for crypto natives", "Make your crypto work in the fiat world.", "/personal/crypto-natives/", "/assets/media/06-dev-f.jpg"),
-            ("Kai for global professionals", "One account for a life across currencies.", "/personal/global-professionals/", "/assets/media/01-hero-f.jpg"),
+             cta=("How Move Money works", "/personal/move-money/"), visual=dict(preset="convert", photo="/assets/media/personal-pay.jpg")),   # still for now, video later
+        dict(t="cards2", plain=True, h2="Made for you", items=[            # plain: the photos without the cube footage over them
+            ("Kai for crypto natives", "Make your crypto work in the fiat world.", "/personal/crypto-natives/", "/assets/media/personal-crypto.jpg"),
+            ("Kai for global professionals", "One account for a life across currencies.", "/personal/global-professionals/", "/assets/media/personal-global.jpg"),
         ]),
         dict(t="final", **FINAL),
     ])

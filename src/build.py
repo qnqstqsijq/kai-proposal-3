@@ -237,8 +237,8 @@ def vis_dashboard(level):
             '<b class="ui__total" data-count="16825.40" data-dec="2" data-pre="€">€16,825.40</b>'
             f'<ul class="ui__rows">{lis}</ul></div></div>')
 
-def vis_convert(level):
-    return (f'<div class="stage stage--wide"{R(level, .1)}>' + stage_bg() + f''
+def vis_convert(level, photo=None):
+    return (f'<div class="stage stage--wide"{R(level, .1)}>' + stage_bg(photo) + f''
             '<div class="stage__shade"></div>'
             '<div class="ui" data-scrub="conv"><div class="ui__top"><span>Pay a bill</span><span class="ui__chip">Rate shown first</span></div>'
             '<div class="conv" style="margin-top:12px">'
@@ -263,8 +263,12 @@ def vis_accounts(level):
 VISUALS = {"dashboard": vis_dashboard, "convert": vis_convert, "accounts": vis_accounts}
 
 # ---------- sections ----------
-def stage_bg():
-    # a people video (the homepage's own clips, taken in turn) with the cube footage laid over it
+def stage_bg(photo=None):
+    # a people video (the homepage's own clips, taken in turn) with the cube footage laid over it;
+    # or a still in its place, for a frame whose video is still to come
+    if photo:
+        return (f'<img class="stage__img" data-par src="{photo}" alt="" loading="lazy" data-photo>'
+                f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
     global _UI_VID
     clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
     return (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
@@ -335,6 +339,8 @@ def visual(v, level):
         return ""
     if isinstance(v, str):
         return VISUALS[v](level)
+    if isinstance(v, dict) and v.get("preset"):          # a ready-made screen with its own still, e.g. dict(preset="convert", photo=...)
+        return VISUALS[v["preset"]](level, photo=v.get("photo"))
     return vis_ui(v, level)
 
 def alink(label, url, cls="lnk", arrow=True):
@@ -423,6 +429,7 @@ def s_hero_pin(s, level):
             f'<div class="wrap phero__grid"><div class="phero__text"><h1>{esc(s["h1"])}</h1>{sub}{bts}</div></div>'
             f'<div class="phero__art" data-tone="dark">' + (
                 (f'<video class="phero__vid" src="{s["video"]}" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><div class="phero__shade"></div>') if s.get("video")
+                else (f'<img class="phero__vid" src="{s["image"]}" alt="" fetchpriority="high" data-photo><div class="phero__shade"></div>') if s.get("image")
                 else '<div class="paccount" aria-hidden="true"></div>' if s.get("scene") == "account"
                 else tfan(s) if s.get("fan") else f'<div class="pglobe" data-shape="{esc(s.get("shape", "dust>nodes3"))}" aria-hidden="true"></div>') +
             f'<div class="wrap phero__grid phero__grid--light" aria-hidden="true"><div class="phero__text"><p class="h1like">{esc(s["h1"])}</p>{sub}'
@@ -471,7 +478,8 @@ def s_split(s, level):
 
 def s_cards2(s, level):
     items = "".join(f'<a class="pcard" href="{u}"{R(level, i * .1)}><img src="{img}" alt="" loading="lazy" data-photo>'
-                    f'<video class="pcard__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
+                    + ("" if s.get("plain") else f'<video class="pcard__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>') +
+                    f''
                     f'<div class="pcard__body"><div><h3>{esc(t)}</h3><p>{esc(d)}</p></div><span class="tile__go" aria-hidden="true">{small("arrow")}</span></div></a>'
                     for i, (t, d, u, img) in enumerate(s["items"]))
     return wrap_sec(s, head(s, level) + f'<div class="cards2">{items}</div>' + tail(s, level))
