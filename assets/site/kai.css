@@ -1455,6 +1455,9 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 .flow__scr .flow__msg{opacity:0}
 .flow__scr.is-on .flow__msg{animation:storyIn .7s cubic-bezier(.22,1,.36,1) var(--d,0s) both}
 @media (max-width:1100px){.flow__scr .flow__msg{opacity:1;animation:none}}
-/* "Humans retain control. Agents execute.": the tethers scene takes the open left half, clear of the text */
-.stmt .pglobe[data-shape="tethers"]{left:0!important;right:auto!important;width:50%!important}
-@media (max-width:900px){.stmt .pglobe[data-shape="tethers"]{width:auto!important}}
+
+/* "Humans retain control. Agents execute.": a big scene across the whole band (like Business overview › two stacks),
+   the section taller to give it room; the scene places itself in the open side, clear of the text */
+.stmt:has(.pglobe[data-shape="orbits"]){min-height:clamp(calc(var(--u)*520),50vw,calc(var(--u)*860))}
+.pglobe[data-shape="orbits"]{left:calc(var(--gutter) * -1)!important;right:calc(var(--gutter) * -1)!important;width:auto!important;top:-14%!important;bottom:-14%!important;height:auto!important;transform:none!important}
+@media (max-width:900px){.stmt:has(.pglobe[data-shape="orbits"]){min-height:0}.pglobe[data-shape="orbits"]{left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;height:calc(var(--u)*420)!important}}

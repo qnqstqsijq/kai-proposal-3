@@ -608,7 +608,7 @@ STMT_SHAPES = {
     "Private by design": "dust>padlock",
     "Custody and security": "keyparts>shield",
     "The fee is part of the move.": "feering",            # its own scene: the move as a ring, the fee a slice of it
-    "Humans retain control. Agents execute.": "tethers",            # its own scene: agents on threads held by you
+    "Humans retain control. Agents execute.": "orbits",             # its own scene: agents racing round your control ring
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
 }

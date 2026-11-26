@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'tethers'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'orbits'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -1048,31 +1048,35 @@ if (hosts.length) {
 }
 
 
-/* "Humans retain control. Agents execute." (Why Kai): a calm mobile of light. In the middle, a bright core (you).
-   Around it, a few soft orbs (agents) drift on slow orbits of their own, each held by a fine thread to the core that
-   hangs loose while they work. Now and then one goes further out to do something that needs you: its thread pulls
-   straight, a pulse of light runs along it from the core (your approval), and the orb blooms once with a soft ring
-   before it drifts back. The cursor turns it a little. */
+/* "Humans retain control. Agents execute." (Why Kai): big and alive. In the middle, your control: a large ring of
+   light with a tick at its heart. Around it, agents at work: six comets racing on their own orbits, each a bright head
+   with a long tail, all of them bound to the ring. Every orbit passes through a checkpoint on the ring; when a comet
+   reaches it, the checkpoint flashes, the tick in the middle lights up and a soft wave goes out across the whole
+   scene: nothing sensitive happens without you. It gathers from dust as the section comes up; the cursor turns it. */
 {
-  const host = document.querySelector('.pglobe[data-shape="tethers"]');
+  const host = document.querySelector('.pglobe[data-shape="orbits"]');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
     const R = Math.random, TAU = Math.PI * 2;
     const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const k = mob ? .55 : 1;
-    const NA = 7, PER_ORB = Math.round(420 * k), PER_THR = Math.round(260 * k), NCORE = Math.round(1600 * k), NRING = Math.round(300 * k), ND = Math.round(1200 * k);
-    const AG = Array.from({ length: NA }, (_, i) => ({ r: 1.9 + (i % 3) * .5 + R() * .25, sp: (.12 + R() * .1) * (i % 2 ? 1 : -1), ph: R() * TAU,
-      tilt: (R() - .5) * 1.1, yaw: R() * TAU, size: .13 + R() * .05, out: 0, pulse: 0, bloom: 0 }));
-    const N = NA * (PER_ORB + PER_THR + NRING) + NCORE + ND;
-    const sph = n => { const y = R() * 2 - 1, q = Math.sqrt(1 - y * y), a = R() * TAU; return [q * Math.cos(a), y, q * Math.sin(a)]; };
-    const orbPts = new Float32Array(PER_ORB * 3); for (let i = 0; i < PER_ORB; i++) { const p = sph(), rr = R() < .8 ? 1 : .55; orbPts.set([p[0] * rr, p[1] * rr, p[2] * rr], i * 3); }   // a clean glass bead: mostly its surface
-    const corePts = new Float32Array(NCORE * 3); for (let i = 0; i < NCORE; i++) { const p = sph(), ring = R() < .3, rr = ring ? .5 : (R() < .75 ? .3 : Math.pow(R(), .6) * .3);
-      corePts.set(ring ? [Math.cos(i) * .5, Math.sin(i) * .5, 0] : [p[0] * rr, p[1] * rr, p[2] * rr], i * 3); }   // a bright sphere with a ring round it
+    const k = mob ? .5 : 1;
+    const RING = 1.25, NL = 6, PER = Math.round(1500 * k), NRING = Math.round(4200 * k), NTK = Math.round(1100 * k), ND = Math.round(2200 * k);
+    const LANES = Array.from({ length: NL }, (_, i) => ({ a: 2.1 + (i % 3) * .55 + R() * .15, b: 1.15 + (i % 2) * .35 + R() * .1,
+      tilt: (i / NL) * Math.PI + R() * .2, lean: (R() - .5) * .9, sp: .32 + R() * .18, ph: R() }));
+    const N = NL * PER + NRING + NTK + ND;
+    // the tick at the heart
+    const tick = []; for (let i = 0; i < NTK; i++) { const f = R(), sg = f < .36, a = sg ? [-.42, .02] : [-.14, -.28], b = sg ? [-.14, -.28] : [.46, .36], u = sg ? f / .36 : (f - .36) / .64;
+      tick.push([a[0] + (b[0] - a[0]) * u + (R() - .5) * .05, a[1] + (b[1] - a[1]) * u + (R() - .5) * .05]); }
+    const ringPts = []; for (let i = 0; i < NRING; i++) { const t = R(), a = R() * TAU;
+      if (t < .6) { const b = R() * TAU, rr = .045; ringPts.push([(RING + rr * Math.cos(b)) * Math.cos(a), (RING + rr * Math.cos(b)) * Math.sin(a), rr * Math.sin(b), 0]); }
+      else if (t < .82) { const m = Math.floor(R() * 60), aa = m / 60 * TAU, l = m % 5 === 0 ? .2 : .1, d = RING + .12 + R() * l; ringPts.push([d * Math.cos(aa), d * Math.sin(aa), 0, 1]); }   // dial ticks
+      else { const d = RING * .62 * Math.sqrt(R()); ringPts.push([d * Math.cos(a), d * Math.sin(a), (R() - .5) * .04, 2]); } }                                       // faint inner disc
+    const dust = []; for (let i = 0; i < ND; i++) dust.push([(R() * 2 - 1) * 6, (R() * 2 - 1) * 3.4, (R() * 2 - 1) * 2]);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
-    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
-    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), hi = new Float32Array(N), seed = new Float32Array(N);
-    for (let i = 0; i < N; i++) seed[i] = R();
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 1, .1, 60);
+    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), hi = new Float32Array(N), seed = new Float32Array(N), from = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { seed[i] = R(); const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 3 + R() * 4; from[i * 3] = rad * q * Math.cos(a) * 1.6; from[i * 3 + 1] = rad * yy; from[i * 3 + 2] = rad * q * Math.sin(a); }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
     g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('aH', new THREE.BufferAttribute(hi, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
@@ -1081,65 +1085,67 @@ if (hosts.length) {
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: dark ? THREE.AdditiveBlending : THREE.NormalBlending,
       vertexShader: `attribute float aA, aS, aH, rnd; uniform float uPx, uDark; varying vec3 vCol; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.05 + rnd * 1.05) * (10. / -mv.z);
-          vec3 lo = uDark > .5 ? vec3(.16, .42, .46) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.95, 1., 1.) : vec3(.05, .36, .39);
+          gl_PointSize = uPx * aS * (1.05 + rnd * 1.05) * (11. / -mv.z);
+          vec3 lo = uDark > .5 ? vec3(.16, .42, .46) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.95, 1., 1.) : vec3(.03, .36, .4);
           vCol = mix(mix(lo, mid, fract(rnd * 3.7)), top, aH); vA = aA; }`,
       fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
-        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.06, .25, d))); }` });
+        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.07, .25, d))); }` });
     const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
     const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
     let W = 0, H = 0;
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
-      camera.position.set(0, 0, 10); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
-      const halfH = 10 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
-      grp.scale.setScalar(Math.min(1.5, halfH * 2 * .92 / 6.4, halfW * 2 * .92 / 7.0));
+      camera.position.set(0, 0, 11); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+      const halfH = 11 * Math.tan(THREE.MathUtils.degToRad(16)), halfW = halfH * camera.aspect, wide = w / h > 1.3;
+      grp.scale.setScalar(wide ? Math.min(1.45, halfH * 2 * .98 / 6.8) : Math.min(1, halfW * 2 * .92 / 7));
+      grp.position.x = wide ? -halfW * .5 : 0;                                 // in the open side, clear of the text
       U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
     size(); new ResizeObserver(size).observe(host);
     const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
     zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
     zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
-    let t = 0, on = false, running = false, last = performance.now(), next = 1.5, act = -1, actT = 0;
-    const where = (ag, tt) => { const a = ag.ph + tt * ag.sp, rr = ag.r + ag.out * .75;
-      let x = Math.cos(a) * rr, y = Math.sin(a) * rr * .8, z = Math.sin(a) * rr * .35;
-      const ct = Math.cos(ag.tilt), st = Math.sin(ag.tilt); [y, z] = [y * ct - z * st, y * st + z * ct];
-      const cy = Math.cos(ag.yaw), sy2 = Math.sin(ag.yaw); [x, z] = [x * cy + z * sy2, -x * sy2 + z * cy];
-      return [x, y + Math.sin(tt * .6 + ag.ph) * .08, z]; };
+    const target = () => { const r = zone.getBoundingClientRect(), vh = innerHeight; return Math.min(1, Math.max(0, (vh * 1.0 - r.top) / (vh * .7))); };
+    // a lane's point at phase u (0..1): an ellipse, turned and leaned in 3D; the checkpoint (u = 0) sits on the ring
+    const lane = (L, u) => { const a = u * TAU; let x = (Math.cos(a) * L.a + L.a) * .5 + RING * Math.cos(L.tilt) * 0, y = Math.sin(a) * L.b, z = 0;
+      x = Math.cos(a) * L.a - (L.a - RING); const c = Math.cos(L.tilt), s2 = Math.sin(L.tilt); [x, y] = [x * c - y * s2, x * s2 + y * c];
+      const cl = Math.cos(L.lean), sl = Math.sin(L.lean); [y, z] = [y * cl - z * sl, y * sl + z * cl]; return [x, y, z]; };
+    let t = 0, p = 0, on = false, running = false, last = performance.now(), flash = 0, wave = -1;
+    const lastU = new Float32Array(NL).fill(.5), cp = new Float32Array(NL);
     const frame = now => {
       const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      const tg = target(); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 2.4); const form = sm(.05, .7, p);
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
-      if (act < 0 && t > next) { act = Math.floor(R() * NA); actT = 0; }
-      AG.forEach((ag, i) => { if (i === act) { actT += dt;
-          ag.out = sm(0, 1.2, actT) * (1 - sm(4.4, 5.6, actT)); ag.pulse = actT > 1.4 && actT < 2.6 ? (actT - 1.4) / 1.2 : -1; ag.bloom = actT > 2.5 ? Math.min(1, (actT - 2.5) / 1.2) : 0;
-          if (actT > 5.8) { act = -1; next = t + 1.8 + R() * 1.6; ag.out = 0; ag.bloom = 0; ag.pulse = -1; } }
-        else { ag.out *= .96; ag.pulse = -1; ag.bloom = 0; } });
+      // comets: when a head passes its checkpoint, it flashes and the tick lights up
+      for (let l = 0; l < NL; l++) { const L = LANES[l], u = (L.ph + t * L.sp * .25) % 1;
+        if (u < lastU[l]) { cp[l] = 1; flash = 1; wave = 0; } lastU[l] = u; cp[l] = Math.max(0, cp[l] - dt * 1.4); }
+      flash = Math.max(0, flash - dt * .9); if (wave >= 0) { wave += dt * .9; if (wave > 1.4) wave = -1; }
       let n = 0;
-      const put = (x, y, z, a, s, h) => { pos[n * 3] = x; pos[n * 3 + 1] = y; pos[n * 3 + 2] = z; alp[n] = a; siz[n] = s; hi[n] = h; n++; };
-      // the core (you): bright, breathing, with a thin shell
-      const br = 1 + Math.sin(t * 1.4) * .04;
-      for (let i = 0; i < NCORE; i++) put(corePts[i * 3] * br, corePts[i * 3 + 1] * br, corePts[i * 3 + 2] * br, .85, 1, .55);
-      AG.forEach((ag, ai) => {
-        const p = where(ag, t), taut = ag.out;
-        // the thread: hangs in a soft curve when loose, pulls straight when the agent needs you
-        const mid = [p[0] * .5, p[1] * .5 - .55 * (1 - taut), p[2] * .5];
-        for (let i = 0; i < PER_THR; i++) { const u = (i + .5) / PER_THR, v = 1 - u;
-          const x = v * v * 0 + 2 * v * u * mid[0] + u * u * p[0], y = 2 * v * u * mid[1] + u * u * p[1], z = 2 * v * u * mid[2] + u * u * p[2];
-          const pl = ag.pulse >= 0 ? Math.max(0, 1 - Math.abs(u - ag.pulse) * 9) : 0;          // your approval, travelling out
-          put(x, y, z, .35 + taut * .3 + pl * .6, .8 + pl * .5, pl); }
-        // the agent: a soft orb
-        const sz = ag.size * (1 + ag.bloom * .25 * Math.sin(Math.PI * ag.bloom));
-        for (let i = 0; i < PER_ORB; i++) put(p[0] + orbPts[i * 3] * sz, p[1] + orbPts[i * 3 + 1] * sz, p[2] + orbPts[i * 3 + 2] * sz, .85, .9, .35 + ag.bloom * .5);
-        // the bloom: one soft ring when the work is approved and done
-        for (let i = 0; i < NRING; i++) { const a = i / NRING * TAU, rr = .12 + ag.bloom * .7;
-          put(p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr, p[2], ag.bloom > 0 ? (1 - ag.bloom) * .7 : 0, .8, .8); }
-      });
-      for (let i = 0; i < ND; i++) { const r = seed[i + 3]; put(Math.sin(r * 91) * 4 + Math.sin(t * .3 + r * 50) * .1, Math.cos(r * 57) * 2.5 + Math.cos(t * .27 + r * 40) * .1, Math.sin(r * 33) * 1.2, .08 + .16 * r, .7, 0); }
+      const put = (x, y, z, a, s, h) => { const o = n * 3, f = form;
+        pos[o] = from[o] + (x - from[o]) * f; pos[o + 1] = from[o + 1] + (y - from[o + 1]) * f; pos[o + 2] = from[o + 2] + (z - from[o + 2]) * f;
+        alp[n] = a * (.3 + .7 * f); siz[n] = s; hi[n] = h; n++; };
+      const wv = r => wave >= 0 ? Math.max(0, 1 - Math.abs(r - wave * 6) * 1.2) * (1 - wave / 1.4) : 0;
+      // the lanes with their comets
+      for (let l = 0; l < NL; l++) { const L = LANES[l], head = (L.ph + t * L.sp * .25) % 1;
+        for (let i = 0; i < PER; i++) { const r = seed[n], tailF = i / PER, u = (head - tailF * .42 + 1) % 1;
+          const q = lane(L, u), jit = .03 + tailF * .07;
+          const x = q[0] + Math.sin(r * 91 + t) * jit, y = q[1] + Math.cos(r * 57 + t) * jit, z = q[2] + Math.sin(r * 33) * jit;
+          const headGlow = Math.pow(1 - tailF, 6);
+          put(x, y, z, (.12 + .8 * Math.pow(1 - tailF, 2.2)) * 1, .8 + headGlow * .9, headGlow * .9 + wv(Math.hypot(x, y)) * .6); } }
+      // your ring, the checkpoints on it, and the tick at the heart
+      for (let i = 0; i < NRING; i++) { const q = ringPts[i], a = Math.atan2(q[1], q[0]);
+        let lit = 0; for (let l = 0; l < NL; l++) { const c = lane(LANES[l], 0), ca = Math.atan2(c[1], c[0]); let d = Math.abs(a - ca); d = Math.min(d, TAU - d); lit = Math.max(lit, cp[l] * Math.max(0, 1 - d * 6)); }
+        const base = q[3] === 2 ? .12 : q[3] === 1 ? .55 : .7;
+        put(q[0], q[1], q[2], base + lit * .4 + flash * .15, q[3] === 2 ? .8 : 1, lit + flash * .3 + wv(RING) * .5); }
+      for (let i = 0; i < NTK; i++) { const q = tick[i]; put(q[0] * 1.2, q[1] * 1.2, .05, .35 + flash * .65, 1.05, flash); }
+      for (let i = 0; i < ND; i++) { const q = dust[i], r = seed[n]; const x = q[0] + Math.sin(t * .3 + r * 50) * .1, y = q[1] + Math.cos(t * .27 + r * 40) * .1;
+        put(x, y, q[2], .08 + .16 * r + wv(Math.hypot(x, y)) * .35, .7, wv(Math.hypot(x, y))); }
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aH.needsUpdate = true;
-      grp.rotation.y = sx * .35 + Math.sin(t * .1) * .15; grp.rotation.x = .1 + sy * .15;
+      grp.rotation.y = -.25 + sx * .3 + Math.sin(t * .12) * .1; grp.rotation.x = .18 + sy * .15;
       renderer.render(scene, camera);
       if (on && !reduce) requestAnimationFrame(frame); else running = false;
     };
     function kick() { if (running || !on) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
     new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
+    addEventListener('scroll', kick, { passive: true });
   }
 }
