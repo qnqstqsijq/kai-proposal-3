@@ -190,8 +190,9 @@ PAGES["B-09"] = dict(level=3,
         dict(t="hero", variant="sub", eyebrow="Business pricing", h1="See the cost before you move.",
              sub="Silver, Gold and Platinum plans for Kai Business. Kai platform is designed to show the rate and fees before you confirm.",
              buttons=[WAIT, SALES],
-             visual=dict(title="Business plans", chip="Per year",
-                         rows=[("S", "Silver", "Account plan", "€95.88"), ("G", "Gold", "Account plan", "€179.88"), ("P", "Platinum", "Account plan", "€359.88")])),
+             # particles in place of the frame: the three plans as glass panels, each with its yearly price as a coin stack
+             # (assets/site/particles.js: "tiers")
+             shape="tiers"),
         dict(t="plans", h2="Three plans, priced per year.", plans=plans(["€95.88", "€179.88", "€359.88"], ["€179.88", "€119.88", "€0"]),
              line=BIZ_AGENT_LINE),
         dict(t="table", h2="The same plan rates as Personal.",

@@ -186,11 +186,11 @@ def shell(url, level, title, desc, main, noindex=False):
     lenis = ('<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>\n' if level <= 3 else "")
     robots = '<meta name="robots" content="noindex">\n' if noindex else ""
     calm = " kbg--calm" if level >= 4 else ""
-    if "data-scene=" in main or 'class="pglobe"' in main or 'class="pcards"' in main or 'class="paccount"' in main:
+    if "data-scene=" in main or 'class="pglobe' in main or 'class="pcards"' in main or 'class="paccount"' in main:
         lenis += IMPORTMAP   # one import map per page
     if "data-scene=" in main:
         lenis += f'<script type="module" src="/assets/site/cards3d.js?v={V_3D}"></script>\n'
-    if 'class="pglobe"' in main or 'class="pcards"' in main or 'class="paccount"' in main:
+    if 'class="pglobe' in main or 'class="pcards"' in main or 'class="paccount"' in main:
         lenis += f'<script type="module" src="/assets/site/particles.js?v={V_PT}"></script>\n'
     return f"""<!doctype html>
 <html lang="en">
