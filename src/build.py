@@ -285,7 +285,10 @@ def vis_ui(v, level):
     # every UI frame: a people video (the homepage's own clips, taken in turn) with the cube footage laid over it,
     # as on the homepage UI sections
     global _UI_VID
-    clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
+    if v.get("clip"):
+        clip = v["clip"]                                  # this frame's own video
+    else:
+        clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
     img = (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
            f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>')
     p = []
@@ -417,7 +420,9 @@ def s_hero_pin(s, level):
             # the dark text sits under the scene; a light copy rides inside the scene, so the colour changes exactly where
             # the scene's edge passes over each letter
             f'<div class="wrap phero__grid"><div class="phero__text"><h1>{esc(s["h1"])}</h1>{sub}{bts}</div></div>'
-            f'<div class="phero__art" data-tone="dark">' + (tfan(s) if s.get("fan") else f'<div class="pglobe" data-shape="{esc(s.get("shape", "dust>nodes3"))}" aria-hidden="true"></div>') +
+            f'<div class="phero__art" data-tone="dark">' + (
+                (f'<video class="phero__vid" src="{s["video"]}" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><div class="phero__shade"></div>') if s.get("video")
+                else tfan(s) if s.get("fan") else f'<div class="pglobe" data-shape="{esc(s.get("shape", "dust>nodes3"))}" aria-hidden="true"></div>') +
             f'<div class="wrap phero__grid phero__grid--light" aria-hidden="true"><div class="phero__text"><p class="h1like">{esc(s["h1"])}</p>{sub}'
             + buttons(s.get("buttons", []), level, 0).replace('<a ', '<a tabindex="-1" ') + '</div></div></div>' + f'{ui}'
             f'</div></section>')

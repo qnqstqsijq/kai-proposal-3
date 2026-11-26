@@ -1302,7 +1302,7 @@ a.person:hover .tile__go{transform:translateX(calc(var(--u)*4))}
 .phero__grid--light{position:absolute;inset:0;z-index:2;pointer-events:none}
 .phero__sticky>.phero__grid .phero__text{--pc:var(--ink)}
 .phero__grid--light .phero__text{--pc:#f4f2f0}
-.phero__grid--light .h1like{font-family:"Clash Display",var(--display);font-weight:600;font-size:var(--t-h1);line-height:1;letter-spacing:-.01em;margin:0}
+.phero__grid--light .h1like{font-family:"Clash Display",var(--display);font-weight:600;font-size:var(--t-h1);line-height:1;letter-spacing:-.01em;margin:0;text-wrap:balance}
 .phero__grid--light .btn1{background:rgba(192,212,215,.35);color:var(--paper)}
 @media (max-width:900px){.phero__grid--light{display:none}}
 
@@ -1377,3 +1377,8 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 .stmt:has(.pglobe[data-shape="stacks"]){min-height:clamp(calc(var(--u)*460),46vw,calc(var(--u)*760))}
 .pglobe[data-shape="stacks"]{left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);width:auto;top:-12%;bottom:-12%;height:auto;transform:none}
 @media (max-width:900px){.stmt:has(.pglobe[data-shape="stacks"]){min-height:0}.pglobe[data-shape="stacks"]{left:auto;right:auto;top:auto;bottom:auto;height:calc(var(--u)*380)}}
+
+/* pinned header with a video as its scene (Business overview): the video fills the art, a soft shade on the left keeps
+   the light heading readable while the video is full screen */
+.phero__vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.phero__shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(11,24,31,.62) 0%,rgba(11,24,31,.34) 42%,rgba(11,24,31,.08) 75%,rgba(11,24,31,0) 100%)}
