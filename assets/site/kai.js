@@ -225,10 +225,22 @@
 
   /* story sections (like the homepage Kai AI section): while the section is pinned, scroll moves through the steps;
      the active step lights up and the UI screen shows everything up to that step. Stacked layout: everything shown. */
+  var countUp = function (el) {
+    var a = +el.getAttribute("data-from"), b = +el.getAttribute("data-to"), pre = el.getAttribute("data-pre") || "", t0 = performance.now(), D = 1400;
+    var fmt = function (v) { return pre + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    if (a === b || reduce) { el.textContent = fmt(b); return; }
+    el.textContent = fmt(a);
+    var step = function (now) { var p = Math.min(1, (now - t0 - 500) / D); if (p < 0) { requestAnimationFrame(step); return; }
+      var e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(a + (b - a) * e); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  };
   $$("[data-story]").forEach(function (sec) {
     var steps = $$(".kstory__step", sec), parts = $$("[data-at]", sec), n = steps.length, cur = 0;
     var show = function (k) {
       if (k === cur) return; cur = k;
+      sec.setAttribute("data-k", k);                                        /* flow sections: which screen the widget shows */
+      $$(".flow__scr", sec).forEach(function (s) { var on = +s.getAttribute("data-s") === k; s.classList.toggle("is-on", on);
+        var tv = $(".ui__total[data-to]", s); if (on && tv) countUp(tv); });
       steps.forEach(function (li, i) { li.classList.toggle("on", i + 1 === k); });
       parts.forEach(function (p) { p.classList.toggle("is-shown", +p.getAttribute("data-at") <= k); });
     };

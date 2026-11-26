@@ -561,3 +561,140 @@ if (hosts.length) {
     addEventListener('scroll', () => { if (reduce && on) { running = false; requestAnimationFrame(frame); } else kick(); }, { passive: true });
   }
 }
+
+/* Business accounts header: "one account for fiat, crypto and stocks". A vault made of light: a slowly turning dial
+   ring around one bright coin carrying the Kai mark (the one balance). Three streams fly into it from the left and are
+   absorbed: tumbling coins (fiat), small spinning blocks (crypto) and a rising chart line (stocks). It gathers from dust
+   when the header first shows, follows the cursor a little, and moves into the frame on the right as the header draws
+   back (the frame's progress is read from .phero__art data-k, like the Cards header). Same aqua light as the other
+   dark scenes; the homepage's screen dust floats over everything. */
+{
+  const host = document.querySelector('.paccount');
+  if (host) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760, R = Math.random, TAU = Math.PI * 2;
+    const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    // Kai mark as points (-1…1)
+    const markPts = (() => { const S = 200, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); g.fillStyle = '#fff';
+      g.translate(S * .08, S * .08); g.scale(S * .84 / 104, S * .84 / 104);
+      ['M43.2773 67.3906C49.2947 66.5932 55.2169 66.4682 61.0439 67.0117V66.9922L61.6895 67.0732C72.8282 68.208 82.4104 71.7968 90.4355 77.8398L75.417 92.374L61.6895 79.1318L61.6875 79.1289V103.032C61.6875 103.678 61.3647 104.002 60.7188 104.002H43.2773C42.6315 104.002 42.3086 103.678 42.3086 103.032V68.3115C42.3086 67.6657 42.6315 67.3584 43.2773 67.3906Z',
+       'M35.6895 42.3115C36.3354 42.3115 36.6427 42.6343 36.6104 43.2803C37.4077 49.297 37.5326 55.2184 36.9893 61.0449H37.0078L36.9336 61.6279C36.9315 61.6487 36.9308 61.6697 36.9287 61.6904H36.9268C35.792 72.8291 32.2032 82.4114 26.1602 90.4365L11.626 75.417L24.8682 61.6904H0.96875C0.323023 61.6904 0.000106046 61.3674 0 60.7217V43.2803C0 42.6344 0.322917 42.3116 0.96875 42.3115H35.6895Z',
+       'M92.374 28.584L79.1318 42.3115H103.031C103.677 42.3116 104 42.6344 104 43.2803V60.7217C104 61.3674 103.677 61.6904 103.031 61.6904H68.3105C67.6647 61.6904 67.3575 61.3674 67.3896 60.7217C66.5923 54.705 66.4675 48.7834 67.0107 42.957H66.9922L67.0654 42.3721C67.0675 42.3519 67.0692 42.3317 67.0713 42.3115H67.0732C68.208 31.1728 71.7968 21.5905 77.8398 13.5654L92.374 28.584Z',
+       'M60.7227 0C61.3684 6.34367e-05 61.6913 0.323029 61.6914 0.96875V35.6904C61.6913 36.3361 61.3684 36.6426 60.7227 36.6104C54.7053 37.4078 48.7831 37.5318 42.9561 36.9883V37.0098L42.3105 36.9287C31.1718 35.794 21.5896 32.2052 13.5645 26.1621L28.583 11.6279L42.3105 24.8701L42.3125 24.8721V0.96875C42.3126 0.322966 42.6354 0 43.2812 0H60.7227Z'
+      ].forEach(d => g.fill(new Path2D(d)));
+      const d = g.getImageData(0, 0, S, S).data, p = [];
+      for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) p.push([x / S * 2 - 1, 1 - y / S * 2]);
+      return p; })();
+
+    const k = mob ? .45 : 1;
+    const NR = Math.round(7000 * k), NT = Math.round(1600 * k), NCORE = Math.round(4200 * k);
+    const NCO = 22, PCO = Math.round(46 * k), NCU = 22, PCU = Math.round(52 * k), NLN = Math.round(2400 * k);
+    const N = NR + NT + NCORE + NCO * PCO + NCU * PCU + NLN;
+    const base = new Float32Array(N * 3), dust = new Float32Array(N * 3), kind = new Uint8Array(N), obj = new Uint16Array(N), seed = new Float32Array(N);
+    let n = 0;
+    const put = (x, y, z, kd, o = 0) => { base[n * 3] = x; base[n * 3 + 1] = y; base[n * 3 + 2] = z; kind[n] = kd; obj[n] = o; seed[n] = R();
+      const a = R() * TAU, yy = R() * 2 - 1, s = Math.sqrt(1 - yy * yy), rad = 2 + R() * 3.5; dust[n * 3] = rad * s * Math.cos(a) * 1.6; dust[n * 3 + 1] = rad * yy; dust[n * 3 + 2] = rad * s * Math.sin(a); n++; };
+    // 0 dial ring (torus) · 1 tick ring · 2 core coin with the mark · 3 coins · 4 blocks · 5 chart line
+    for (let i = 0; i < NR; i++) { const a = R() * TAU, b = R() * TAU, r = 1.18 + .055 * Math.cos(b); put(r * Math.cos(a), r * Math.sin(a), .055 * Math.sin(b), 0); }
+    for (let i = 0; i < NT; i++) { const t = Math.floor(R() * 72), a = t / 72 * TAU + (R() - .5) * .004, r = 1.36 + R() * (t % 6 === 0 ? .14 : .06); put(r * Math.cos(a), r * Math.sin(a), 0, 1); }
+    for (let i = 0; i < NCORE; i++) { const t = R(), a = R() * TAU;
+      if (t < .25) put(.6 * Math.cos(a), .6 * Math.sin(a), (R() - .5) * .08, 2);                                  // rim
+      else if (t < .45) { const r = .6 * Math.sqrt(R()); put(r * Math.cos(a), r * Math.sin(a), (R() < .5 ? -1 : 1) * .04, 2); }   // faces
+      else { const p = markPts[Math.floor(R() * markPts.length)]; put(p[0] * .38, p[1] * .38, .06, 2); } }          // the Kai mark, raised
+    for (let o = 0; o < NCO; o++) for (let i = 0; i < PCO; i++) { const a = R() * TAU, t = R();
+      if (t < .6) put(.1 * Math.cos(a), .1 * Math.sin(a), (R() - .5) * .02, 3, o); else { const r = .1 * Math.sqrt(R()); put(r * Math.cos(a), r * Math.sin(a), (R() < .5 ? -1 : 1) * .01, 3, o); } }
+    for (let o = 0; o < NCU; o++) for (let i = 0; i < PCU; i++) { const ax = Math.floor(R() * 3), p = [(R() < .5 ? -1 : 1), (R() < .5 ? -1 : 1), (R() < .5 ? -1 : 1)]; p[ax] = R() * 2 - 1;
+      put(p[0] * .07, p[1] * .07, p[2] * .07, 4, o); }
+    for (let i = 0; i < NLN; i++) put(0, 0, 0, 5, 0);
+    // the paths into the vault (cubic Bézier from far left to the core), with a little spiral as they arrive
+    const bez = (P, u) => { const v = 1 - u; return [0, 1, 2].map(j => v * v * v * P[0][j] + 3 * v * v * u * P[1][j] + 3 * v * u * u * P[2][j] + u * u * u * P[3][j]); };
+    const PATH_CO = [[-5.6, 1.9, -.6], [-3.2, 2.2, .4], [-1.2, 1.1, .8], [0, 0, 0]];
+    const PATH_CU = [[-5.6, -2.0, .8], [-3.0, -2.3, -.6], [-1.1, -1.2, .7], [0, 0, 0]];
+    // the chart: a rising zig-zag, then a curve into the core
+    const CH = [[-5.8, -.9], [-5.0, -.6], [-4.5, -.95], [-3.8, -.35], [-3.3, -.6], [-2.6, .05], [-2.1, -.2], [-1.5, .25], [-.75, .12], [0, 0]];
+    const chLen = []; let tot = 0; for (let i = 1; i < CH.length; i++) { tot += Math.hypot(CH[i][0] - CH[i - 1][0], CH[i][1] - CH[i - 1][1]); chLen.push(tot); }
+    const chartAt = u => { const d = u * tot; let i = 0; while (i < chLen.length - 1 && chLen[i] < d) i++;
+      const d0 = i ? chLen[i - 1] : 0, f = (d - d0) / (chLen[i] - d0), a = CH[i], b = CH[i + 1]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 0]; };
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(35, 1, .1, 60);
+    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), tone = new Float32Array(N);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
+    g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('aT', new THREE.BufferAttribute(tone, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
+    const U = { uPx: { value: 1 } };
+    const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: `attribute float aA, aS, aT, rnd; uniform float uPx; varying vec3 vC; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+          gl_PointSize = uPx * aS * (1.1 + rnd * 1.1) * (6.5 / -mv.z);
+          vec3 deep = vec3(.16, .42, .46), aqua = vec3(.5, .86, .9), foam = vec3(.9, 1., 1.);
+          vC = aT < .5 ? mix(deep, aqua, aT * 2.) : mix(aqua, foam, aT * 2. - 1.); vA = aA; }`,
+      fragmentShader: `varying vec3 vC; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
+        gl_FragColor = vec4(vC, vA * (1. - smoothstep(.06, .25, d))); }` });
+    const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
+    const tilt = new THREE.Group(); tilt.add(pts); const holder = new THREE.Group(); holder.add(tilt); scene.add(holder);
+    // the homepage screen dust, over everything
+    const NF = mob ? 4000 : 9000, fb = new Float32Array(NF * 3), fr = new Float32Array(NF);
+    for (let i = 0; i < NF; i++) { fb[i * 3] = R(); fb[i * 3 + 1] = R(); fb[i * 3 + 2] = R(); fr[i] = R(); }
+    const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fb, 3)); fg.setAttribute('rnd', new THREE.BufferAttribute(fr, 1));
+    const FU = { uTime: { value: 0 }, uPx: { value: 1 } };
+    const field = new THREE.Points(fg, new THREE.ShaderMaterial({ uniforms: FU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      vertexShader: `uniform float uTime, uPx; attribute float rnd; varying float vA;
+        void main(){ float k = rnd, z = position.z, sp = .004 + .012 * z;
+          vec2 q = position.xy + vec2(uTime * sp * (.6 + .8 * fract(k * 7.3)), uTime * sp * .35 * (fract(k * 3.1) - .5)) + .012 * vec2(sin(uTime * .31 + k * 40.), cos(uTime * .27 + k * 31.));
+          q = fract(q); gl_Position = vec4(q * 2. - 1., 0., 1.); gl_PointSize = uPx * (.5 + .7 * z * z);
+          vA = (.12 + .36 * z) * (.55 + .45 * sin(uTime * (.6 + k) + k * 60.)); }`,
+      fragmentShader: `varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard; gl_FragColor = vec4(.62, .9, .93, vA * (1. - smoothstep(.02, .25, d))); }` }));
+    field.frustumCulled = false; field.renderOrder = -1; scene.add(field);
+
+    const art = host.closest('.phero__art'), zone = host.closest('section') || host;
+    let W = 0, H = 0, A0 = { x: 0, s: 1 }, A1 = { x: 0, s: 1 };
+    const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
+      if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
+      camera.position.set(0, .35, 7); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+      const halfH = 7 * Math.tan(THREE.MathUtils.degToRad(17.5)), halfW = halfH * camera.aspect, wide = w / h > 1.3;
+      A0 = { x: wide ? halfW * .3 : 0, s: wide ? 1.12 : Math.min(1, w / h) };            // full screen: right of the heading
+      A1 = { x: wide ? halfW * .5 : 0, s: wide ? .92 : Math.min(1, w / h) };             // in the frame on the right
+      const px = renderer.getPixelRatio(); U.uPx.value = px * (mob ? 1 : 1.15); FU.uPx.value = px; };
+    size(); new ResizeObserver(size).observe(host);
+    let mx = 0, my = 0, sx = 0, sy = 0, on = false, t = 0, last = performance.now(), born = null;
+    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; });
+    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
+    new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) { if (born === null) born = performance.now(); last = performance.now(); requestAnimationFrame(frame); } }).observe(host);
+    function frame(now) {
+      if (!on) return; requestAnimationFrame(frame);
+      const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      const gather = reduce ? 1 : sm(0, 1.8, (now - born) / 1000);                       // gathers from dust when it first shows
+      sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
+      const kk = art ? +(art.getAttribute('data-k') || 0) : 0;
+      holder.position.x = A0.x + (A1.x - A0.x) * kk; const sc = A0.s + (A1.s - A0.s) * kk; holder.scale.setScalar(sc);
+      tilt.rotation.y = -.32 + sx * .28 + Math.sin(t * .2) * .05; tilt.rotation.x = .1 + sy * .16;
+      const rA = t * .12, rB = -t * .07, ca = Math.cos(rA), sa = Math.sin(rA), cb = Math.cos(rB), sb = Math.sin(rB);
+      const pulse = 1 + .035 * Math.sin(t * 2.2);
+      for (let i = 0; i < N; i++) {
+        const o = i * 3, kd = kind[i], r = seed[i]; let x, y, z, a = 1, s = 1, tn = .5;
+        const bx = base[o], by = base[o + 1], bz = base[o + 2];
+        if (kd === 0) { x = bx * ca - by * sa; y = bx * sa + by * ca; z = bz; a = .55; tn = .45 + .2 * Math.sin(Math.atan2(y, x) * 3 + t); }
+        else if (kd === 1) { x = bx * cb - by * sb; y = bx * sb + by * cb; z = bz; a = .7; tn = .7; s = .9; }
+        else if (kd === 2) { const cz = Math.cos(t * .35), szz = Math.sin(t * .35);                      // the core coin turns slowly
+          x = bx * cz * pulse; y = by * pulse; z = bx * szz + bz; a = Math.abs(bz - .06) < .001 ? 1 : .7; tn = a > .9 ? .95 : .6; s = a > .9 ? 1.1 : 1; }
+        else if (kd === 3 || kd === 4) {                                                             // coins and blocks flying in
+          const ob = obj[i], u = (t * .075 + ob / (kd === 3 ? NCO : NCU) + (kd === 4 ? .5 / NCU : 0)) % 1;
+          const P = bez(kd === 3 ? PATH_CO : PATH_CU, u), sp = (1 - u) * .35, ph = u * 9 + ob;
+          const spin = t * (1.6 + (ob % 5) * .3) + ob, cs = Math.cos(spin), sn = Math.sin(spin);
+          const lx = bx * cs + bz * sn, lz = -bx * sn + bz * cs, ly = kd === 4 ? by * Math.cos(spin * .7) - lz * Math.sin(spin * .7) : by;
+          const shrink = 1 - sm(.86, 1, u) * .9;
+          x = P[0] + lx * shrink + Math.cos(ph) * sp * .4; y = P[1] + ly * shrink + Math.sin(ph) * sp * .4; z = P[2] + lz * shrink;
+          a = sm(0, .08, u) * (1 - sm(.9, 1, u)) * .95; tn = kd === 3 ? .8 : .55; }
+        else {                                                                                       // the chart line flowing in
+          const u = (r + t * .045) % 1, P = chartAt(u);
+          x = P[0] + (R() - .5) * .012; y = P[1] + (R() - .5) * .012; z = (r - .5) * .04;
+          a = sm(0, .06, u) * (1 - sm(.93, 1, u)) * (.55 + .45 * Math.sin(u * 40 - t * 3)); tn = .85; s = .85; }
+        if (gather < 1) { x = dust[o] + (x - dust[o]) * gather; y = dust[o + 1] + (y - dust[o + 1]) * gather; z = dust[o + 2] + (z - dust[o + 2]) * gather; a *= .3 + .7 * gather; }
+        pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s; tone[i] = tn;
+      }
+      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aT.needsUpdate = true;
+      FU.uTime.value = t; renderer.render(scene, camera);
+    }
+  }
+}

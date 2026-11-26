@@ -1389,3 +1389,38 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 .phero__grid--light .btn2{color:var(--paper)}
 .phero__grid--light .btn2.is-hover::before{clip-path:circle(150% at var(--x) var(--y))}
 .phero__grid--light .btn2.is-hover{color:var(--deep)}
+
+/* Business accounts header: the particle vault fills the pinned scene */
+.phero .paccount{position:absolute;inset:0;pointer-events:none}
+.phero .paccount canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+
+/* flow section (Business accounts › Receive, hold and move): the frame is a plain dark teal box for now; the widget is
+   centred in it and shows one screen per step, each playing its action when its step lights up */
+.flow__stage{background:radial-gradient(130% 135% at 37% 2%,var(--pine) 0%,var(--night) 100%)}
+.flow__ui{display:grid}
+.flow__scr{grid-area:1/1;opacity:0;visibility:hidden;transform:translateY(calc(var(--u)*14));transition:opacity .5s ease,transform .7s cubic-bezier(.22,1,.36,1),visibility 0s linear .5s}
+.flow__scr.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .6s ease,transform .8s cubic-bezier(.22,1,.36,1),visibility 0s}
+.flow__scr .ui__row,.flow__scr .conv__leg,.flow__scr .ui__kv{opacity:0;transform:translateY(calc(var(--u)*10))}
+.flow__scr.is-on .ui__row,.flow__scr.is-on .conv__leg,.flow__scr.is-on .ui__kv{animation:storyIn .7s cubic-bezier(.22,1,.36,1) var(--d,0s) both}
+/* receive: the incoming amounts glow teal as they land */
+.flow__scr[data-s="1"] .ui__row span:last-child{color:var(--pine);font-weight:500}
+/* hold: a slim bar under each asset fills to its share */
+.ui__mini{display:block;height:calc(var(--u)*4);width:calc(var(--u)*120);margin-top:calc(var(--u)*6);border-radius:2px;background:rgba(4,24,32,.08);overflow:hidden;font-style:normal}
+.ui__mini i{display:block;height:100%;width:0;background:var(--teal);border-radius:inherit;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.flow__scr.is-on .ui__row--bar .ui__mini i{width:var(--w);transition-delay:calc(var(--d) + .25s)}
+/* move: the confirm button fills, then turns into "Sent" */
+.flow__btn{position:relative;overflow:hidden;isolation:isolate}
+.flow__btn::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--deep);transform:scaleX(0);transform-origin:left}
+.flow__scr.is-on .flow__btn::before{animation:storyFill 1.1s cubic-bezier(.65,0,.35,1) 1.2s both}
+.flow__btn .flow__done{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0}
+.flow__scr.is-on .flow__btn>span:first-child{animation:flowOut .3s ease 2.3s both}
+.flow__scr.is-on .flow__btn .flow__done{animation:flowIn .4s ease 2.4s both}
+@keyframes flowOut{to{opacity:0;transform:translateY(-6px)}}
+@keyframes flowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:1100px){.flow__ui{display:flex;flex-direction:column;gap:calc(var(--u)*18)}.flow__scr{opacity:1;visibility:visible;transform:none}
+  .flow__scr .ui__row,.flow__scr .conv__leg,.flow__scr .ui__kv{opacity:1;transform:none;animation:none}.flow__scr .ui__mini i{width:var(--w)}}
+@media (prefers-reduced-motion:reduce){.flow__scr.is-on *{animation-duration:.01s!important;animation-delay:0s!important}}
+.kstory--flow .ui .flow__btn{background:rgba(4,24,32,.1);color:var(--deep)}
+.kstory--flow .ui .flow__btn .flow__done{color:var(--paper)}
+.kstory--flow .flow__scr.is-on .flow__btn{animation:flowTxt .3s ease 1.6s both}
+@keyframes flowTxt{to{color:var(--paper)}}

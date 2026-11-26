@@ -49,22 +49,33 @@ PAGES["B-03"] = dict(level=3,
     title="Business accounts | One account for fiat, crypto and stocks",
     desc="A Kai Business account with KYB, IBANs for euros and pounds, and one balance for fiat, crypto, stablecoins and US-listed stocks.",
     sections=[
-        dict(t="hero", variant="sub", eyebrow="Business accounts", h1="A business account for fiat, crypto and stocks",
+        # pinned header like Personal › Cards: a particle vault fills the screen, then draws back into the frame on the
+        # right, where the account panel comes in, centred
+        dict(t="hero", variant="pin", scene="account", ui_center=True, eyebrow="Business accounts", h1="A business account for fiat, crypto and stocks",
              sub="One account, with KYB, your own IBAN for euros and pounds, and one balance.", buttons=[WAIT, SALES],
              visual=dict(BIZ_TOTAL, title="Business account", chip="One balance",
                          kv=[("EUR IBAN", "•••• •••• •••• 7710"), ("GBP IBAN", "•••• •••• •••• 2093")])),
         dict(t="cards", h2="One account. One balance.",
              lead="Kai Business is being built so your company can hold, move and spend fiat, crypto, stablecoins and US-listed stocks from one balance, with the rate and fees shown before you confirm.",
              items=[
-                ("shield", "KYB", "The business is verified, including beneficial-owner checks, and stays the account owner."),
-                ("account", "IBANs", "Your own IBAN for euros and pounds, with more to come later."),
-                ("chart", "US-listed stocks", "Part of the first release, in the same account."),
+                ("kyb", "KYB", "The business is verified, including beneficial-owner checks, and stays the account owner."),
+                ("iban", "IBANs", "Your own IBAN for euros and pounds, with more to come later."),
+                ("stocks", "US-listed stocks", "Part of the first release, in the same account."),
              ]),
-        BIZ_PRICING_BAND,
-        dict(t="steps", h2="Receive, hold and move, in one place.", items=[
+        dict(BIZ_PRICING_BAND, dust=False),                     # no dust over this banner
+        # scroll-driven, like the homepage Kai AI section: each step plays its action in the account widget
+        dict(t="flow", h2="Receive, hold and move, in one place.", steps=[
             ("Receive", "Get paid to your IBAN, or receive crypto and stablecoins."),
             ("Hold", "See fiat, crypto, stablecoins and stocks in one view."),
             ("Move", "Convert or send, with the rate and fees shown first."),
+        ], screens=[
+            dict(title="Business account", chip="Receiving", total=(248390.00, 265790.00, "€"), rows=[
+                ("€", "Incoming SEPA", "Nordlicht GmbH · IBAN •••• 7710", "+€12,400.00"),
+                ("◎", "USDC received", "Ethereum network", "+5,000.00 USDC")]),
+            dict(title="Business account", chip="One balance", total=(265790.00, 265790.00, "€"), bars=[
+                ("€", "Fiat", "€187,400.00", 70), ("₿", "Crypto", "€38,120.00", 15), ("◎", "Stablecoins", "€26,870.00", 10), ("↗", "Stocks", "€13,400.00", 5)]),
+            dict(title="Move money", chip="Rate shown first", conv=("You send", "€5,000.00", "EUR", "They receive", "5,412.30 USDC", "USDC"),
+                 kv=[("Rate", "1 EUR = 1.0825 USDC"), ("Fee", "€4.50"), ("Arrives", "In a few minutes")], btn="Confirm", done="Sent ✓"),
         ]),
         dict(t="faq", h2="Questions about business accounts", items=[
             ("Which currencies do the IBANs use?", "Kai Business is being built with IBANs for euros and pounds, with more to come later."),

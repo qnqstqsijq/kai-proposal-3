@@ -186,11 +186,11 @@ def shell(url, level, title, desc, main, noindex=False):
     lenis = ('<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>\n' if level <= 3 else "")
     robots = '<meta name="robots" content="noindex">\n' if noindex else ""
     calm = " kbg--calm" if level >= 4 else ""
-    if "data-scene=" in main or 'class="pglobe"' in main or 'class="pcards"' in main:
+    if "data-scene=" in main or 'class="pglobe"' in main or 'class="pcards"' in main or 'class="paccount"' in main:
         lenis += IMPORTMAP   # one import map per page
     if "data-scene=" in main:
         lenis += f'<script type="module" src="/assets/site/cards3d.js?v={V_3D}"></script>\n'
-    if 'class="pglobe"' in main or 'class="pcards"' in main:
+    if 'class="pglobe"' in main or 'class="pcards"' in main or 'class="paccount"' in main:
         lenis += f'<script type="module" src="/assets/site/particles.js?v={V_PT}"></script>\n'
     return f"""<!doctype html>
 <html lang="en">
@@ -423,6 +423,7 @@ def s_hero_pin(s, level):
             f'<div class="wrap phero__grid"><div class="phero__text"><h1>{esc(s["h1"])}</h1>{sub}{bts}</div></div>'
             f'<div class="phero__art" data-tone="dark">' + (
                 (f'<video class="phero__vid" src="{s["video"]}" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><div class="phero__shade"></div>') if s.get("video")
+                else '<div class="paccount" aria-hidden="true"></div>' if s.get("scene") == "account"
                 else tfan(s) if s.get("fan") else f'<div class="pglobe" data-shape="{esc(s.get("shape", "dust>nodes3"))}" aria-hidden="true"></div>') +
             f'<div class="wrap phero__grid phero__grid--light" aria-hidden="true"><div class="phero__text"><p class="h1like">{esc(s["h1"])}</p>{sub}'
             + buttons(s.get("buttons", []), level, 0).replace('<a ', '<a tabindex="-1" ') + '</div></div></div>' + f'{ui}'
@@ -557,7 +558,8 @@ def s_cards(s, level):
     scenes = [(list(it) + [None] * 5)[4] or scenes[i] for i, it in enumerate(items)]   # a card can name its own scene
     for i, it in enumerate(items):
         ic, t, d, u = (list(it) + [None] * 4)[:4]
-        ico = (home_icon(t, "card__ico", s.get("dark")) or icon(ic, "card__ico")) if ic else ""
+        FIGMA_ICONS = ("kyb", "iban", "stocks", "key", "tag", "chats")   # Figma pictograms named on purpose win over the homepage icon
+        ico = (icon(ic, "card__ico") if ic in FIGMA_ICONS else (home_icon(t, "card__ico", s.get("dark")) or icon(ic, "card__ico"))) if ic else ""
         text = f"{ico}<h3>{esc(t)}</h3>" + (f"<p>{esc(d)}</p>" if d else "")
         sc = f' data-scene="{scenes[i]}"'
         p = BY_URL.get(u) if u else None
@@ -666,6 +668,45 @@ def s_story(s, level):
     return (f'<section class="kstory" data-story style="--n:{n}"><div class="kstory__pin"><div class="wrap kstory__grid">'
             f'<div class="kstory__vis">{stage}</div>'
             f'<div class="kstory__text"><h2 class="h2">{esc(s["h2"])}</h2>{sub}<ol class="kkstory__steps">{lis}</ol>{note}</div>'
+            '</div></div></section>')
+
+# Flow: pinned like the story section (the homepage Kai AI section). Scrolling moves through the steps; the widget in the
+# frame shows that step's screen and plays its action (kai.js: data-story sets data-k). The frame is left as a plain
+# dark teal box for now (video to come).
+def s_flow(s, level):
+    steps, scr = s["steps"], s["screens"]
+    n = len(steps)
+    def rows(rs, cls=""):
+        return "".join(f'<li class="ui__row{cls}" style="--d:{.25 + i * .18:g}s"><span class="ui__ico">{esc(a)}</span><div><b>{esc(t)}</b>'
+                       + (f'<small>{esc(sm)}</small>' if sm else "") + f'</div><span>{esc(v)}</span></li>' for i, (a, t, sm, v) in enumerate(rs))
+    out = []
+    for i, sc in enumerate(scr):
+        body = ""
+        if sc.get("total"):
+            a, b2, pre = sc["total"]
+            body += f'<b class="ui__total" data-from="{a}" data-to="{b2}" data-pre="{esc(pre)}">{esc(pre)}{a:,.2f}</b>'
+        if sc.get("rows"):
+            body += f'<ul class="ui__rows">{rows(sc["rows"])}</ul>'
+        if sc.get("bars"):
+            body += '<ul class="ui__rows">' + "".join(f'<li class="ui__row ui__row--bar" style="--d:{.2 + j * .15:g}s;--w:{w}%"><span class="ui__ico">{esc(a)}</span><div><b>{esc(t)}</b><i class="ui__mini"><i></i></i></div><span>{esc(v)}</span></li>'
+                                              for j, (a, t, v, w) in enumerate(sc["bars"])) + '</ul>'
+        if sc.get("conv"):
+            c = sc["conv"]
+            body += ('<div class="conv" style="margin-top:12px">'
+                     f'<div class="conv__leg" style="--d:.2s"><div><small>{esc(c[0])}</small><b>{esc(c[1])}</b></div><span class="ui__chip">{esc(c[2])}</span></div>'
+                     f'<div class="conv__swap" aria-hidden="true">{icon("move", "ui__swapico")}</div>'
+                     f'<div class="conv__leg" style="--d:.45s"><div><small>{esc(c[3])}</small><b>{esc(c[4])}</b></div><span class="ui__chip">{esc(c[5])}</span></div></div>')
+        if sc.get("kv"):
+            body += '<div class="ui__det">' + "".join(f'<div class="ui__kv" style="--d:{.6 + j * .12:g}s"><span>{esc(k2)}</span><b>{esc(v)}</b></div>' for j, (k2, v) in enumerate(sc["kv"])) + '</div>'
+        if sc.get("btn"):
+            body += f'<div class="ui__btn flow__btn"><span>{esc(sc["btn"])}</span><span class="flow__done">{esc(sc.get("done", "Done"))}</span></div>'
+        out.append(f'<div class="flow__scr" data-s="{i + 1}"><div class="ui__top"><span>{esc(sc["title"])}</span><span class="ui__chip">{esc(sc["chip"])}</span></div>{body}</div>')
+    ui = f'<div class="ui ui--center flow__ui">{"".join(out)}</div>'
+    stage = f'<div class="stage flow__stage">{ui}</div>'
+    lis = "".join(f'<li class="kstory__step" data-i="{i + 1}"><h3>{esc(t)}</h3><p>{esc(d)}</p></li>' for i, (t, d) in enumerate(steps))
+    return (f'<section class="kstory kstory--flow" data-story data-k="1" style="--n:{n}"><div class="kstory__pin"><div class="wrap kstory__grid">'
+            f'<div class="kstory__vis">{stage}</div>'
+            f'<div class="kstory__text"><h2 class="h2">{esc(s["h2"])}</h2><ol class="kkstory__steps">{lis}</ol></div>'
             '</div></div></section>')
 
 # Spread: the homepage "Your money lives in too many places." scene. Centred heading and text; the same eight account
@@ -862,6 +903,8 @@ def render_sections(spec, pid):
             out.append(s_spread(s, level)); continue
         if s["t"] == "story":
             out.append(s_story(s, level)); continue
+        if s["t"] == "flow":
+            out.append(s_flow(s, level)); continue
         if s["t"] == "security":
             out.append(s_security(s, level)); continue
         if s["t"] == "faq":
