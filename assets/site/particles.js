@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'limits'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'tethers'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -1048,30 +1048,26 @@ if (hosts.length) {
 }
 
 
-/* "Humans retain control. Agents execute." (Why Kai): your limits as a glass sphere of specks, with agents at work
-   inside it, small bright clusters darting about with trails, never leaving it; where one touches the edge the sphere
-   lights up for a moment. On one side there is a gate with a tick. Every few seconds an agent heads for the gate and
-   waits there with something sensitive; the tick lights up (you approve), the gate opens and the agent goes through,
-   then a new one starts inside. The cursor turns the sphere a little. */
+/* "Humans retain control. Agents execute." (Why Kai): a calm mobile of light. In the middle, a bright core (you).
+   Around it, a few soft orbs (agents) drift on slow orbits of their own, each held by a fine thread to the core that
+   hangs loose while they work. Now and then one goes further out to do something that needs you: its thread pulls
+   straight, a pulse of light runs along it from the core (your approval), and the orb blooms once with a soft ring
+   before it drifts back. The cursor turns it a little. */
 {
-  const host = document.querySelector('.pglobe[data-shape="limits"]');
+  const host = document.querySelector('.pglobe[data-shape="tethers"]');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
     const R = Math.random, TAU = Math.PI * 2;
     const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const k = mob ? .5 : 1;
-    const RS = 1.75, NA = mob ? 9 : 14, TRL = 26, NSPH = Math.round(5200 * k), NAG = 70, NGATE = Math.round(900 * k), NTICK = Math.round(500 * k), ND = Math.round(1100 * k);
-    const GATE = new THREE.Vector3(1, .12, .25).normalize();                 // where the gate is on the sphere
-    // sphere points (even spread)
-    const sph = new Float32Array(NSPH * 3);
-    for (let i = 0; i < NSPH; i++) { const y = 1 - 2 * (i + .5) / NSPH, r = Math.sqrt(1 - y * y), a = i * 2.39996; sph[i * 3] = Math.cos(a) * r; sph[i * 3 + 1] = y; sph[i * 3 + 2] = Math.sin(a) * r; }
-    // agents
-    const A = [];
-    const spawn = ag => { const d = new THREE.Vector3(R() - .5, R() - .5, R() - .5).normalize();
-      ag.p = d.clone().multiplyScalar(R() * RS * .6); ag.v = new THREE.Vector3(R() - .5, R() - .5, R() - .5).normalize().multiplyScalar(.9 + R() * .8);
-      ag.mode = 0; ag.tr = Array.from({ length: TRL }, () => ag.p.clone()); ag.age = 0; ag.hit = -9; ag.hitPos = new THREE.Vector3(); };
-    for (let i = 0; i < NA; i++) { const ag = {}; spawn(ag); A.push(ag); }
-    const N = NSPH + NA * (NAG + TRL) + NGATE + NTICK + ND;
+    const k = mob ? .55 : 1;
+    const NA = 7, PER_ORB = Math.round(420 * k), PER_THR = Math.round(260 * k), NCORE = Math.round(1600 * k), NRING = Math.round(300 * k), ND = Math.round(1200 * k);
+    const AG = Array.from({ length: NA }, (_, i) => ({ r: 1.9 + (i % 3) * .5 + R() * .25, sp: (.12 + R() * .1) * (i % 2 ? 1 : -1), ph: R() * TAU,
+      tilt: (R() - .5) * 1.1, yaw: R() * TAU, size: .13 + R() * .05, out: 0, pulse: 0, bloom: 0 }));
+    const N = NA * (PER_ORB + PER_THR + NRING) + NCORE + ND;
+    const sph = n => { const y = R() * 2 - 1, q = Math.sqrt(1 - y * y), a = R() * TAU; return [q * Math.cos(a), y, q * Math.sin(a)]; };
+    const orbPts = new Float32Array(PER_ORB * 3); for (let i = 0; i < PER_ORB; i++) { const p = sph(), rr = R() < .8 ? 1 : .55; orbPts.set([p[0] * rr, p[1] * rr, p[2] * rr], i * 3); }   // a clean glass bead: mostly its surface
+    const corePts = new Float32Array(NCORE * 3); for (let i = 0; i < NCORE; i++) { const p = sph(), ring = R() < .3, rr = ring ? .5 : (R() < .75 ? .3 : Math.pow(R(), .6) * .3);
+      corePts.set(ring ? [Math.cos(i) * .5, Math.sin(i) * .5, 0] : [p[0] * rr, p[1] * rr, p[2] * rr], i * 3); }   // a bright sphere with a ring round it
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
@@ -1085,77 +1081,61 @@ if (hosts.length) {
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: dark ? THREE.AdditiveBlending : THREE.NormalBlending,
       vertexShader: `attribute float aA, aS, aH, rnd; uniform float uPx, uDark; varying vec3 vCol; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.1 + rnd * 1.05) * (10. / -mv.z);
-          vec3 lo = uDark > .5 ? vec3(.16, .42, .46) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.95, 1., 1.) : vec3(.04, .34, .37);
+          gl_PointSize = uPx * aS * (1.05 + rnd * 1.05) * (10. / -mv.z);
+          vec3 lo = uDark > .5 ? vec3(.16, .42, .46) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.95, 1., 1.) : vec3(.05, .36, .39);
           vCol = mix(mix(lo, mid, fract(rnd * 3.7)), top, aH); vA = aA; }`,
       fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
-        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
+        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.06, .25, d))); }` });
     const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
     const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
-    // fixed offsets for agent bodies and the tick
-    const body = new Float32Array(NAG * 3); for (let i = 0; i < NAG; i++) { const d = new THREE.Vector3(R() - .5, R() - .5, R() - .5).normalize().multiplyScalar(Math.pow(R(), 1.6) * .09); body[i * 3] = d.x; body[i * 3 + 1] = d.y; body[i * 3 + 2] = d.z; }
-    const tick = new Float32Array(NTICK * 2); for (let i = 0; i < NTICK; i++) { const f = R(), sg = f < .38;               // a tick: short stroke, then long stroke
-      const a = sg ? [-.22, .02] : [-.07, -.13], b = sg ? [-.07, -.13] : [.24, .2], u = sg ? f / .38 : (f - .38) / .62;
-      tick[i * 2] = a[0] + (b[0] - a[0]) * u + (R() - .5) * .025; tick[i * 2 + 1] = a[1] + (b[1] - a[1]) * u + (R() - .5) * .025; }
-    const gU = new THREE.Vector3(0, 1, 0).cross(GATE).normalize(), gV = GATE.clone().cross(gU).normalize();   // the gate's own frame
     let W = 0, H = 0;
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
       camera.position.set(0, 0, 10); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
       const halfH = 10 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
-      grp.scale.setScalar(Math.min(1.3, halfH * 2 * .86 / (RS * 2.2), halfW * 2 * .8 / (RS * 2.9)));
+      grp.scale.setScalar(Math.min(1.5, halfH * 2 * .92 / 6.4, halfW * 2 * .92 / 7.0));
       U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
     size(); new ResizeObserver(size).observe(host);
     const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
     zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
     zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
-    let t = 0, on = false, running = false, last = performance.now(), nextGate = 2.5, gateAg = null, gateT = 0;
-    const tmp = new THREE.Vector3(), seek = new THREE.Vector3();
+    let t = 0, on = false, running = false, last = performance.now(), next = 1.5, act = -1, actT = 0;
+    const where = (ag, tt) => { const a = ag.ph + tt * ag.sp, rr = ag.r + ag.out * .75;
+      let x = Math.cos(a) * rr, y = Math.sin(a) * rr * .8, z = Math.sin(a) * rr * .35;
+      const ct = Math.cos(ag.tilt), st = Math.sin(ag.tilt); [y, z] = [y * ct - z * st, y * st + z * ct];
+      const cy = Math.cos(ag.yaw), sy2 = Math.sin(ag.yaw); [x, z] = [x * cy + z * sy2, -x * sy2 + z * cy];
+      return [x, y + Math.sin(tt * .6 + ag.ph) * .08, z]; };
     const frame = now => {
-      const dt = Math.min(.04, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
-      // pick an agent to bring a sensitive move to the gate
-      if (!gateAg && t > nextGate) { gateAg = A[Math.floor(R() * A.length)]; gateAg.mode = 1; gateT = 0; }
-      let approve = 0, open = 0;
-      for (const ag of A) {
-        ag.age += dt;
-        if (ag.mode === 0) {                                                     // free inside the limits
-          ag.v.x += Math.sin(t * 1.3 + ag.age * 2.1) * dt * .9; ag.v.y += Math.cos(t * 1.1 + ag.age * 1.7) * dt * .9; ag.v.z += Math.sin(t * .9 + ag.age) * dt * .9;
-          ag.v.clampLength(.6, 1.7); ag.p.addScaledVector(ag.v, dt * (reduce ? 0 : 1));
-          const L = ag.p.length(); if (L > RS * .93) { const n = ag.p.clone().normalize(); ag.v.addScaledVector(n, -2 * ag.v.dot(n)); ag.p.setLength(RS * .92); ag.hit = t; ag.hitPos.copy(n); } }
-        else if (ag.mode === 1) {                                                // heading for the gate, then waiting there
-          gateT += dt; seek.copy(GATE).multiplyScalar(RS * .86); tmp.copy(seek).sub(ag.p);
-          ag.p.addScaledVector(tmp, Math.min(1, dt * 2.2)); ag.v.multiplyScalar(.9);
-          if (gateT > 2.2) approve = sm(2.2, 2.9, gateT);
-          if (gateT > 3.0) { ag.mode = 2; gateT = 0; } }
-        else if (ag.mode === 2) {                                                // approved: through the gate and out
-          gateT += dt; approve = 1 - sm(.8, 1.6, gateT); open = 1 - sm(1.0, 1.8, gateT);
-          ag.p.addScaledVector(GATE, dt * 1.6);
-          if (ag.p.length() > RS * 1.9) { spawn(ag); gateAg = null; nextGate = t + 3 + R() * 2; } }
-        if (ag.mode === 1) open = Math.max(open, sm(2.4, 3.0, gateT));
-        ag.tr.pop(); ag.tr.unshift(ag.p.clone());
-      }
+      if (act < 0 && t > next) { act = Math.floor(R() * NA); actT = 0; }
+      AG.forEach((ag, i) => { if (i === act) { actT += dt;
+          ag.out = sm(0, 1.2, actT) * (1 - sm(4.4, 5.6, actT)); ag.pulse = actT > 1.4 && actT < 2.6 ? (actT - 1.4) / 1.2 : -1; ag.bloom = actT > 2.5 ? Math.min(1, (actT - 2.5) / 1.2) : 0;
+          if (actT > 5.8) { act = -1; next = t + 1.8 + R() * 1.6; ag.out = 0; ag.bloom = 0; ag.pulse = -1; } }
+        else { ag.out *= .96; ag.pulse = -1; ag.bloom = 0; } });
       let n = 0;
       const put = (x, y, z, a, s, h) => { pos[n * 3] = x; pos[n * 3 + 1] = y; pos[n * 3 + 2] = z; alp[n] = a; siz[n] = s; hi[n] = h; n++; };
-      // the sphere: faint, lit where agents touch it, brighter round the gate
-      for (let i = 0; i < NSPH; i++) { const x = sph[i * 3], y = sph[i * 3 + 1], z = sph[i * 3 + 2];
-        let lit = 0; for (const ag of A) { const age = t - ag.hit; if (age < .8) { const d = 1 - (x * ag.hitPos.x + y * ag.hitPos.y + z * ag.hitPos.z); lit = Math.max(lit, (1 - age / .8) * Math.max(0, 1 - d * 9)); } }
-        const gd = 1 - (x * GATE.x + y * GATE.y + z * GATE.z), inGate = gd < .028 * (1 + open * 3.2);
-        if (inGate && open > .05) { put(0, 0, 0, 0, 0, 0); continue; }        // the gate opens: a hole in the sphere
-        const ring = Math.abs(gd - .05) < .012 ? 1 : 0;
-        put(x * RS, y * RS, z * RS, .22 + lit * .6 + ring * (.4 + approve * .5), .85 + lit * .3, lit + ring * approve); }
-      // agents and their trails
-      for (const ag of A) { const gl = ag.mode > 0 ? 1 : 0;
-        for (let i = 0; i < NAG; i++) put(ag.p.x + body[i * 3], ag.p.y + body[i * 3 + 1], ag.p.z + body[i * 3 + 2], .9, 1.05, .5 + gl * .5);
-        for (let i = 0; i < TRL; i++) { const q = ag.tr[i]; put(q.x, q.y, q.z, (1 - i / TRL) * .55, .8, .3); } }
-      // the gate ring (always faint) and the tick that lights when you approve
-      for (let i = 0; i < NGATE; i++) { const a = (i / NGATE) * TAU, rr = .38 + (seed[i] - .5) * .03, c = GATE.clone().multiplyScalar(RS);
-        put(c.x + (gU.x * Math.cos(a) + gV.x * Math.sin(a)) * rr, c.y + (gU.y * Math.cos(a) + gV.y * Math.sin(a)) * rr, c.z + (gU.z * Math.cos(a) + gV.z * Math.sin(a)) * rr, .45 + approve * .5, .9, approve); }
-      for (let i = 0; i < NTICK; i++) { const c = GATE.clone().multiplyScalar(RS + .75), u = tick[i * 2] * 1.4, v = tick[i * 2 + 1] * 1.4;
-        put(c.x + gU.x * u + gV.x * v, c.y + gU.y * u + gV.y * v, c.z + gU.z * u + gV.z * v, .25 + approve * .75, 1 + approve * .2, approve); }
-      for (let i = 0; i < ND; i++) { const r = seed[i + 7]; put(Math.sin(r * 91) * 4.2 + Math.sin(t * .3 + r * 50) * .1, Math.cos(r * 57) * 2.4 + Math.cos(t * .27 + r * 40) * .1, Math.sin(r * 33) * 1.2, .08 + .18 * r, .7, 0); }
+      // the core (you): bright, breathing, with a thin shell
+      const br = 1 + Math.sin(t * 1.4) * .04;
+      for (let i = 0; i < NCORE; i++) put(corePts[i * 3] * br, corePts[i * 3 + 1] * br, corePts[i * 3 + 2] * br, .85, 1, .55);
+      AG.forEach((ag, ai) => {
+        const p = where(ag, t), taut = ag.out;
+        // the thread: hangs in a soft curve when loose, pulls straight when the agent needs you
+        const mid = [p[0] * .5, p[1] * .5 - .55 * (1 - taut), p[2] * .5];
+        for (let i = 0; i < PER_THR; i++) { const u = (i + .5) / PER_THR, v = 1 - u;
+          const x = v * v * 0 + 2 * v * u * mid[0] + u * u * p[0], y = 2 * v * u * mid[1] + u * u * p[1], z = 2 * v * u * mid[2] + u * u * p[2];
+          const pl = ag.pulse >= 0 ? Math.max(0, 1 - Math.abs(u - ag.pulse) * 9) : 0;          // your approval, travelling out
+          put(x, y, z, .35 + taut * .3 + pl * .6, .8 + pl * .5, pl); }
+        // the agent: a soft orb
+        const sz = ag.size * (1 + ag.bloom * .25 * Math.sin(Math.PI * ag.bloom));
+        for (let i = 0; i < PER_ORB; i++) put(p[0] + orbPts[i * 3] * sz, p[1] + orbPts[i * 3 + 1] * sz, p[2] + orbPts[i * 3 + 2] * sz, .85, .9, .35 + ag.bloom * .5);
+        // the bloom: one soft ring when the work is approved and done
+        for (let i = 0; i < NRING; i++) { const a = i / NRING * TAU, rr = .12 + ag.bloom * .7;
+          put(p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr, p[2], ag.bloom > 0 ? (1 - ag.bloom) * .7 : 0, .8, .8); }
+      });
+      for (let i = 0; i < ND; i++) { const r = seed[i + 3]; put(Math.sin(r * 91) * 4 + Math.sin(t * .3 + r * 50) * .1, Math.cos(r * 57) * 2.5 + Math.cos(t * .27 + r * 40) * .1, Math.sin(r * 33) * 1.2, .08 + .16 * r, .7, 0); }
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aH.needsUpdate = true;
-      grp.rotation.y = -.55 + sx * .35 + Math.sin(t * .15) * .1; grp.rotation.x = .12 + sy * .15;
+      grp.rotation.y = sx * .35 + Math.sin(t * .1) * .15; grp.rotation.x = .1 + sy * .15;
       renderer.render(scene, camera);
       if (on && !reduce) requestAnimationFrame(frame); else running = false;
     };

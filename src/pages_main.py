@@ -110,6 +110,10 @@ PAGES["H-03"] = dict(level=3,
         dict(t="final", **FINAL_ALL),
     ])
 
+WHY_ICONS = {"One balance": "onebalance", "Accounts with IBAN": "iban", "Cards": "fg_card", "Crypto and stablecoins": "fg_crypto",
+             "Stocks": "stocks", "Built-in agent": "operator", "Permissions and limits": "control", "Approvals": "approvals",
+             "Activity log": "activitylog", "Your own agent, later": "ownagent"}
+
 PAGES["H-04"] = dict(level=3,
     title="Why Kai | One account. Built for agents. You approve.",
     desc="Why Kai platform: one account for fiat, crypto, stablecoins and stocks, where AI agents act on your behalf and you approve every sensitive move.",
@@ -153,7 +157,8 @@ PAGES["H-04"] = dict(level=3,
                     ("✓", "Budget left this month", "", "€720.00")]),
              ], line="A budget or permission never replaces your confirmation of a transfer."),
         dict(t="cards", feat=True, h2="Everything your money needs. In one place.",
-             items=[x if x[1] != "Stocks" else ("chart", "Stocks", "US-listed stocks in the same account, next to the rest of your money.") for x in FEATURES],
+             # this page's own pictograms from Figma (new pictograms; Stocks from the older "pictograms" frame)
+             items=[(WHY_ICONS[x[1]],) + ((x[1], "US-listed stocks in the same account, next to the rest of your money.") if x[1] == "Stocks" else x[1:]) for x in FEATURES],
              line=FEATURES_LINE),
         dict(t="compare", h2="Many tools. Or one platform.",
              lead="A typical setup splits your money and your workflow. Kai platform is being built to bring them together. This is a comparison against fragmented tools, not against named products.",
