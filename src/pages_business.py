@@ -13,7 +13,7 @@ PAGES["B-01"] = dict(level=2,
     sections=[
         # pinned header like Personal › Cards: the video fills the screen, then draws back into the frame on the right,
         # where the balance panel comes in
-        dict(t="hero", variant="pin", video="/assets/media/biz-hero.mp4", eyebrow="Kai Business", h1="One account for your business. You approve.",
+        dict(t="hero", variant="pin", ui_center=True, video="/assets/media/biz-hero.mp4", eyebrow="Kai Business", h1="One account for your business. You approve.",
              buttons=[WAIT, SALES],
              visual=dict(BIZ_TOTAL, photo="/assets/media/05-business-m.jpg", eager=True, title="Kai Business", chip="One balance")),
         dict(t="text", h2="Your company money still lives in two stacks.",

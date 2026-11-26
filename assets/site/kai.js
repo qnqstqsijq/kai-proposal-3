@@ -571,7 +571,11 @@ document.querySelectorAll("[data-slider]").forEach(function (sl) {
       /* UI panel: rises into the bottom-right of the frame once the frame has settled */
       var u = ease(cl((p - .5) / .3));
       if (ui) { ui.style.opacity = u.toFixed(3); ui.style.transform = "translateY(" + ((1 - u) * 24).toFixed(1) + "px)";
-        ui.style.right = (s.right - f.right + f.width * .055) + "px"; ui.style.bottom = (s.bottom - f.bottom + f.width * .055) + "px";
+        if (sec.hasAttribute("data-ui-center")) {              /* centred in the frame */
+          ui.style.right = "auto"; ui.style.bottom = "auto";
+          ui.style.left = (f.left - s.left + (f.width - ui.offsetWidth) / 2) + "px"; ui.style.top = (f.top - s.top + (f.height - ui.offsetHeight) / 2) + "px";
+        } else {
+        ui.style.right = (s.right - f.right + f.width * .055) + "px"; ui.style.bottom = (s.bottom - f.bottom + f.width * .055) + "px"; }
         ui.classList.toggle("in", u > .5); }                     /* its rows come in one after another */
     });
   };

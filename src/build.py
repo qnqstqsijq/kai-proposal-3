@@ -415,7 +415,8 @@ def s_hero_pin(s, level):
     else:
         ui = (f'<div class="ui phero__ui"><div class="ui__top"><span>{esc(s.get("ui_title", "Team"))}</span><span class="ui__chip">{esc(s.get("ui_chip", ""))}</span></div>'
               f'<ul class="ui__rows">{rows}</ul></div>')
-    return (f'<section class="phero" data-phero><div class="phero__sticky">'
+    ctr = " data-ui-center" if s.get("ui_center") else ""
+    return (f'<section class="phero" data-phero{ctr}><div class="phero__sticky">'
             f'<div class="phero__frame" aria-hidden="true"></div>'
             # the dark text sits under the scene; a light copy rides inside the scene, so the colour changes exactly where
             # the scene's edge passes over each letter

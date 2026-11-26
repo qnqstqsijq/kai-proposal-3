@@ -1382,3 +1382,10 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
    the light heading readable while the video is full screen */
 .phero__vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .phero__shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(11,24,31,.62) 0%,rgba(11,24,31,.34) 42%,rgba(11,24,31,.08) 75%,rgba(11,24,31,0) 100%)}
+
+/* pinned header: the light copy of the second button (text link style) reads light on the scene, with its own hover;
+   nothing inside the scene can catch the pointer, so the real buttons underneath always get the click */
+.phero__art,.phero__art *{pointer-events:none!important}
+.phero__grid--light .btn2{color:var(--paper)}
+.phero__grid--light .btn2.is-hover::before{clip-path:circle(150% at var(--x) var(--y))}
+.phero__grid--light .btn2.is-hover{color:var(--deep)}
