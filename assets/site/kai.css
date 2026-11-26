@@ -1372,3 +1372,8 @@ html body .of-soc__a{display:grid;place-items:center;width:calc(var(--u)*44);hei
   background:rgba(192,212,215,.45);color:#041820!important;transition:background-color .35s ease,color .35s ease}
 html body .of-soc__a:hover{background:#538188;color:#fff!important}
 html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-width:15px;min-height:15px}
+
+/* "two stacks" scene (Business overview): the whole statement band, larger, with room above and below */
+.stmt:has(.pglobe[data-shape="stacks"]){min-height:clamp(calc(var(--u)*460),46vw,calc(var(--u)*760))}
+.pglobe[data-shape="stacks"]{left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);width:auto;top:-12%;bottom:-12%;height:auto;transform:none}
+@media (max-width:900px){.stmt:has(.pglobe[data-shape="stacks"]){min-height:0}.pglobe[data-shape="stacks"]{left:auto;right:auto;top:auto;bottom:auto;height:calc(var(--u)*380)}}

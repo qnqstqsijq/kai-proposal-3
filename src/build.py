@@ -580,7 +580,7 @@ def s_steps(s, level):
     return wrap_sec(s, inner)
 
 STMT_SHAPES = {
-    "Your company money still lives in two stacks.": "twocoins>kaicoin",
+    "Your company money still lives in two stacks.": "stacks",
     "Money is split. AI is starting to act.": "split>cube",
     "A Swiss company, member of VQF": "dust>cross",
     "Built in first, to answer questions. Your own agent later.": "node>nodes2",
@@ -594,7 +594,7 @@ STMT_SHAPES = {
 }
 
 # shapes drawn larger than the usual radius-1 size (as large as the banner allows)
-STMT_SCALE = {"Your company money still lives in two stacks.": 1.2}
+STMT_SCALE = {}
 
 def s_text(s, level):
     body = s.get("body")

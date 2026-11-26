@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')];
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => h.getAttribute('data-shape') !== 'stacks');   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -401,5 +401,163 @@ if (hosts.length) {
         renderer.render(scene, camera);
       }
     });
+  }
+}
+
+
+/* "Two stacks" (Business overview): a scene of its own, larger and livelier than the statement shapes.
+   Two tall stacks of particle coins, fiat on the left (a € coin standing on top) and crypto on the right (a ₿ coin),
+   every coin turning on its own, the stacks swaying and rippling. Between them sparks shoot across the gap and
+   die halfway: nothing connects the two. As you scroll, the coins break off one by one and fly in arcs into the
+   middle, where they land as one stack; the € and ₿ coins fuse into one big Kai coin on top, and a ring of dust
+   bursts out. The cursor turns the whole scene a little. */
+{
+  const host = document.querySelector('.pglobe[data-shape="stacks"]');
+  if (host) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
+    const R = Math.random, TAU = Math.PI * 2;
+    const ease = x => { x = Math.min(1, Math.max(0, x)); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+    // ---------- symbols as point lists (-1…1, y up) ----------
+    const glyph = draw => { const S = 180, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.strokeStyle = '#fff'; draw(g, S); const d = g.getImageData(0, 0, S, S).data, pts = [];
+      for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
+      return pts.length ? pts : [[0, 0]]; };
+    const font = (g, S, k, w) => { g.font = `${w} ${S * k}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; };
+    const EURO = glyph((g, S) => { font(g, S, .82, 600); g.fillText('€', S / 2, S * .54); });
+    const BTC = glyph((g, S) => { font(g, S, .78, 700); g.fillText('B', S / 2, S * .54); g.lineWidth = S * .075;
+      [.42, .57].forEach(x => { g.beginPath(); g.moveTo(S * x, S * .08); g.lineTo(S * x, S * .2); g.moveTo(S * x, S * .88); g.lineTo(S * x, S * 1); g.stroke(); }); });
+    const KAI = glyph((g, S) => { g.translate(S * .08, S * .08); g.scale(S * .84 / 104, S * .84 / 104);
+      ['M43.2773 67.3906C49.2947 66.5932 55.2169 66.4682 61.0439 67.0117V66.9922L61.6895 67.0732C72.8282 68.208 82.4104 71.7968 90.4355 77.8398L75.417 92.374L61.6895 79.1318L61.6875 79.1289V103.032C61.6875 103.678 61.3647 104.002 60.7188 104.002H43.2773C42.6315 104.002 42.3086 103.678 42.3086 103.032V68.3115C42.3086 67.6657 42.6315 67.3584 43.2773 67.3906Z',
+       'M35.6895 42.3115C36.3354 42.3115 36.6427 42.6343 36.6104 43.2803C37.4077 49.297 37.5326 55.2184 36.9893 61.0449H37.0078L36.9336 61.6279C36.9315 61.6487 36.9308 61.6697 36.9287 61.6904H36.9268C35.792 72.8291 32.2032 82.4114 26.1602 90.4365L11.626 75.417L24.8682 61.6904H0.96875C0.323023 61.6904 0.000106046 61.3674 0 60.7217V43.2803C0 42.6344 0.322917 42.3116 0.96875 42.3115H35.6895Z',
+       'M92.374 28.584L79.1318 42.3115H103.031C103.677 42.3116 104 42.6344 104 43.2803V60.7217C104 61.3674 103.677 61.6904 103.031 61.6904H68.3105C67.6647 61.6904 67.3575 61.3674 67.3896 60.7217C66.5923 54.705 66.4675 48.7834 67.0107 42.957H66.9922L67.0654 42.3721C67.0675 42.3519 67.0692 42.3317 67.0713 42.3115H67.0732C68.208 31.1728 71.7968 21.5905 77.8398 13.5654L92.374 28.584Z',
+       'M60.7227 0C61.3684 6.34367e-05 61.6913 0.323029 61.6914 0.96875V35.6904C61.6913 36.3361 61.3684 36.6426 60.7227 36.6104C54.7053 37.4078 48.7831 37.5318 42.9561 36.9883V37.0098L42.3105 36.9287C31.1718 35.794 21.5896 32.2052 13.5645 26.1621L28.583 11.6279L42.3105 24.8701L42.3125 24.8721V0.96875C42.3126 0.322966 42.6354 0 43.2812 0H60.7227Z'
+      ].forEach(d => g.fill(new Path2D(d))); });
+
+    // ---------- the parts ----------
+    const NC = 8, CR = .66, CT = .045;                   // coins per stack, coin radius, half thickness
+    const PER = mob ? 150 : 300;                          // specks per stacked coin
+    const NG = mob ? 700 : 1500;                          // specks per standing symbol coin
+    const NS = mob ? 300 : 700, NRING = mob ? 400 : 900, NAMB = mob ? 900 : 2200;
+    const coinPt = () => { const a = R() * TAU, t = R();                                             // flat coin, local frame
+      if (t < .5) return [CR * Math.cos(a), CT, CR * Math.sin(a)];                                     // crisp top edge
+      if (t < .6) return [CR * Math.cos(a), (R() * 2 - 1) * CT, CR * Math.sin(a)];                    // thin rim
+      if (t < .75) { const r = CR * .78; return [r * Math.cos(a), CT, r * Math.sin(a)]; }            // inner ring on top
+      const r = CR * Math.sqrt(R()); return [r * Math.cos(a), (R() < .7 ? 1 : -1) * CT, r * Math.sin(a)]; };
+    const signPt = (G, r) => { const t = R(), a = R() * TAU;                                         // standing coin with a symbol, facing +z
+      if (t < .25) return [r * Math.cos(a), r * Math.sin(a), (R() * 2 - 1) * .09];
+      if (t < .38) { const rr = r * .84; return [rr * Math.cos(a), rr * Math.sin(a), (R() < .5 ? -1 : 1) * .11]; }
+      if (t < .5) { const rr = r * Math.sqrt(R()); return [rr * Math.cos(a), rr * Math.sin(a), (R() < .5 ? -1 : 1) * .09]; }
+      const p = G[Math.floor(R() * G.length)]; return [p[0] * r * .6, p[1] * r * .6, (R() < .75 ? 1 : -1) * .13]; };
+    const N = 2 * NC * PER + 2 * NG + NS + NRING + NAMB;
+    const loc = new Float32Array(N * 3), end = new Float32Array(N * 3), kind = new Uint8Array(N), idx = new Uint16Array(N), seed = new Float32Array(N);
+    let k = 0;
+    const put = (arr, i, p) => { arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]; };
+    for (let s = 0; s < 2; s++) for (let c = 0; c < NC; c++) for (let j = 0; j < PER; j++, k++) { put(loc, k, coinPt()); kind[k] = 0; idx[k] = s * NC + c; seed[k] = R(); }
+    for (let s = 0; s < 2; s++) for (let j = 0; j < NG; j++, k++) { put(loc, k, signPt(s ? BTC : EURO, .78)); put(end, k, signPt(KAI, 1.05)); kind[k] = 1; idx[k] = s; seed[k] = R(); }
+    for (let j = 0; j < NS; j++, k++) { kind[k] = 2; idx[k] = j % 2; seed[k] = R(); }
+    for (let j = 0; j < NRING; j++, k++) { kind[k] = 3; seed[k] = R(); }
+    for (let j = 0; j < NAMB; j++, k++) { put(loc, k, [(R() * 2 - 1) * 5.5, (R() * 2 - 1) * 2.6, (R() * 2 - 1) * 1.5]); kind[k] = 4; seed[k] = R(); }
+
+    // ---------- renderer ----------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 1, .1, 60);
+    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
+    g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
+    const dark = !!host.closest('.dk,[data-tone="dark"]');
+    const U = { uPx: { value: 1 }, uC1: { value: dark ? new THREE.Color(.42, .74, .76) : new THREE.Color(.04, .17, .19) },
+                uC2: { value: dark ? new THREE.Color(.75, .95, .96) : new THREE.Color(.3, .5, .52) } };
+    const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false,
+      blending: dark ? THREE.AdditiveBlending : THREE.NormalBlending,
+      vertexShader: `attribute float aA, aS, rnd; uniform float uPx; uniform vec3 uC1, uC2; varying vec3 vCol; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+          gl_PointSize = uPx * aS * (1.3 + rnd * 1.1) * (7. / -mv.z); vA = aA; vCol = mix(uC1, uC2, fract(rnd * 3.7)); }`,
+      fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
+          gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
+    const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
+    const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
+
+    let W = 0, H = 0, X0 = 0, SCL = 1;
+    const size = () => { const r = renderer.domElement.getBoundingClientRect(); const w = Math.max(1, r.width), h = Math.max(1, r.height);
+      if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
+      camera.position.set(0, 3.4, 10); camera.lookAt(0, .3, 0); camera.updateProjectionMatrix();        // a little from above: the coin tops show as rings
+      const halfH = 10.5 * Math.tan(THREE.MathUtils.degToRad(16)), halfW = halfH * camera.aspect;
+      const wide = w / h > 1.3;
+      SCL = wide ? Math.min(1.2, (halfH * 2 * .9) / 4.0) : Math.min(1, halfW * 2 * .9 / 5.2);   // the stacks fill the height (or the width, on narrow screens)
+      X0 = wide ? -halfW * .42 : 0;                                                                  // in the open side, clear of the text
+      grp.position.x = X0; grp.scale.setScalar(SCL);
+      U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.2 : 1.5) * Math.min(1.3, Math.max(.8, h / 560)); };
+    size(); new ResizeObserver(size).observe(host);
+
+    // ---------- motion ----------
+    const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
+    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
+    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
+    // apart while the section comes in; the coins fly together as it moves up past the middle of the screen
+    const target = () => { const r = zone.getBoundingClientRect(), vh = innerHeight; return Math.min(1, Math.max(0, (vh * .45 - r.top) / (vh * .5))); };
+    const SX = 1.6, BASE = -1.85, GAPS = .36, GAPE = .125;           // stack x, floor height, coin spacing apart / together
+    const cc = new Float32Array(2 * NC * 3), cy = new Float32Array(2 * NC), cs = new Float32Array(2 * NC);   // coin centre, spin, tilt
+    let t = 0, p = 0, on = false, running = false, last = performance.now();
+    const frame = now => {
+      const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      const tg = target(); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 3.2);
+      sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
+      // coins: where each sits now (stacked apart → flying → one stack in the middle)
+      for (let s = 0; s < 2; s++) for (let c = 0; c < NC; c++) {
+        const i = s * NC + c, side = s ? 1 : -1;
+        const ripple = Math.max(0, Math.sin(t * 2.2 - c * .55)) ** 6 * .09;                      // a lift running up the stack
+        const ax = side * SX + Math.sin(t * .9 + c * .45 + s) * .035 * (c / NC) * 3, ay = BASE + c * GAPS + ripple;
+        const slot = c * 2 + s, bx = Math.sin(t * .8 + slot * .3) * .02, by = BASE + slot * GAPE;
+        const e = ease((p - .08 - (NC - 1 - c) * .045 - s * .02) / .4);                           // top coins leave first
+        const arc = Math.sin(Math.PI * e) * (1.1 + c * .05);
+        cc[i * 3] = ax + (bx - ax) * e; cc[i * 3 + 1] = ay + (by - ay) * e + arc; cc[i * 3 + 2] = Math.sin(Math.PI * e) * .6 * side;
+        cy[i] = t * (.6 + ((i * 37) % 7) * .12) * (i % 2 ? -1 : 1) + e * TAU;                       // each coin turns on its own; a flip while flying
+        cs[i] = Math.sin(Math.PI * e) * .9 * side + Math.sin(t * 1.3 + i * 1.7) * .09;           // each coin a little off level: they read as separate coins
+      }
+      const fuse = ease((p - .55) / .35), burst = Math.max(0, (p - .82) / .18);
+      const topA = BASE + NC * GAPS + .95, topB = BASE + 2 * NC * GAPE + 1.05;
+      for (let n = 0; n < N; n++) {
+        const o = n * 3, kd = kind[n], r = seed[n];
+        let x, y, z, a = 1, sz = 1;
+        if (kd === 0) {                                                                           // stacked coins
+          const i = idx[n], ca = Math.cos(cy[i]), sa = Math.sin(cy[i]), ct = Math.cos(cs[i]), st = Math.sin(cs[i]);
+          let lx = loc[o] * ca - loc[o + 2] * sa, ly = loc[o + 1], lz = loc[o] * sa + loc[o + 2] * ca;
+          const ty = ly * ct - lx * st; lx = lx * ct + ly * st; ly = ty;
+          x = cc[i * 3] + lx; y = cc[i * 3 + 1] + ly; z = cc[i * 3 + 2] + lz; a = .85;
+        } else if (kd === 1) {                                                                    // € / ₿ standing on top → one Kai coin
+          const s = idx[n], side = s ? 1 : -1, sp = t * .7 + side * .4;
+          const fx = side * SX, fy = topA + Math.sin(t * 1.1 + s * 2) * .06;
+          const cxp = fx * (1 - fuse), cyp = fy + (topB - fy) * fuse + Math.sin(Math.PI * fuse) * .8;
+          let lx = loc[o] + (end[o] - loc[o]) * fuse, ly = loc[o + 1] + (end[o + 1] - loc[o + 1]) * fuse, lz = loc[o + 2] + (end[o + 2] - loc[o + 2]) * fuse;
+          const turn = (1 - fuse) * Math.sin(sp) * 1.2 + fuse * Math.sin(t * .5) * .35, ca = Math.cos(turn), sa = Math.sin(turn);
+          const sw = Math.sin(Math.PI * fuse) * .45;                                              // swirl as they fuse
+          x = cxp + lx * ca + lz * sa + Math.sin(r * 40 + t * 3) * sw; y = cyp + ly + Math.cos(r * 31 + t * 3) * sw; z = -lx * sa + lz * ca;
+          a = .95; sz = 1.05;
+        } else if (kd === 2) {                                                                    // sparks across the gap, dying halfway
+          const side = idx[n] ? 1 : -1, u = ((t * (.35 + r * .25) + r * 7) % 1);
+          const sxp = side * (SX - .55), ex = side * .15;
+          x = sxp + (ex - sxp) * u + Math.sin(r * 50 + t * 6) * .05; y = BASE + .4 + r * 2 + Math.sin(u * Math.PI) * .35 + (R() - .5) * .02; z = (r - .5) * .6;
+          a = Math.sin(u * Math.PI) * (1 - u) * 1.6 * (1 - ease(p / .35)); sz = .8;
+        } else if (kd === 3) {                                                                    // the burst ring when they fuse
+          const ang = r * TAU, rad = 1.1 + burst * 2.6 + Math.sin(r * 90) * .08;
+          x = Math.cos(ang) * rad; y = topB + Math.sin(ang) * rad * .9; z = Math.sin(r * 17) * .2;
+          a = burst > 0 ? Math.sin(Math.min(1, burst) * Math.PI) * .9 : 0; sz = .9;
+          if (p >= .999) a = .25 + .15 * Math.sin(t * 2 + r * 20);                                  // a faint ring stays
+        } else {                                                                                  // ambient dust over the whole banner
+          const w = 1.6 + r * 3; x = loc[o] + Math.cos(t * w * .3 + r * 80) * .08 - X0 / SCL * .0; y = loc[o + 1] + Math.sin(t * w * .27 + r * 50) * .08; z = loc[o + 2];
+          a = (.2 + .4 * r) * (.7 + .3 * Math.sin(t * (1 + r * 2) + r * 40)); sz = .65;
+        }
+        pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[n] = a; siz[n] = sz;
+      }
+      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true;
+      grp.rotation.y = sx * .35 + Math.sin(t * .25) * .08; grp.rotation.x = sy * .12;
+      renderer.render(scene, camera);
+      if (on && !reduce) requestAnimationFrame(frame); else running = false;
+    };
+    function kick() { if (running || !on) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
+    new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
+    addEventListener('scroll', () => { if (reduce && on) { running = false; requestAnimationFrame(frame); } else kick(); }, { passive: true });
   }
 }
