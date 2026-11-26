@@ -190,15 +190,15 @@ PAGES["B-09"] = dict(level=3,
         dict(t="hero", variant="sub", eyebrow="Business pricing", h1="See the cost before you move.",
              sub="Silver, Gold and Platinum plans for Kai Business. Kai platform is designed to show the rate and fees before you confirm.",
              buttons=[WAIT, SALES],
-             # particles in place of the frame: the three plans as glass panels, each with its yearly price as a coin stack
-             # (assets/site/particles.js: "tiers")
-             shape="tiers"),
+             # particles in place of the frame: a receipt printing and curling towards you, every cost on it
+             # (assets/site/particles.js: "receipt")
+             shape="receipt"),
         dict(t="plans", h2="Three plans, priced per year.", plans=plans(["€95.88", "€179.88", "€359.88"], ["€179.88", "€119.88", "€0"]),
              line=BIZ_AGENT_LINE),
         dict(t="table", h2="The same plan rates as Personal.",
              lead="Transfers, cards, currency exchange, crypto conversion and trading, and US stock trades follow the same Silver, Gold and Platinum rates as Personal pricing.",
              rows=FEES),
-        dict(t="band", h2="Personal pricing", cta=("Personal pricing", "/pricing/")),
+        dict(t="band", dust=False, h2="Personal pricing", cta=("Personal pricing", "/pricing/")),
         dict(t="faq", h2="Questions about Business pricing", items=[
             ("How do Business plans differ from Personal?", "Business and Personal have their own account plan prices. Usage fees follow the same Silver, Gold and Platinum rates. You can also read Personal pricing."),
             ("Do agent features cost extra?", "There is an optional agent plan, priced per year: Silver €179.88, Gold €119.88 and Platinum €0. At the start, Kai's built-in agent answers questions about your business money. Preparing and executing moves comes next. If a fee applies, Kai platform is designed to show it before you confirm."),

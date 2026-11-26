@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'tiers'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -944,45 +944,43 @@ if (hosts.length) {
 }
 
 
-/* Business pricing header: the three plans for Kai Business, Silver, Gold and Platinum, as three tall glass panels of
-   specks standing in a row, each a step higher, with its letter (S, G, P) on the face. On top of each, the plan's
-   yearly price as a stack of coins: one for Silver, two for Gold, four for Platinum, roughly in line with €95.88,
-   €179.88 and €359.88. The panels rise from dust in turn when the header shows; coins drop onto their stacks; a soft
-   line of light scans across all three, like the cost being shown; the panel nearest the cursor lifts a little. */
+/* Business pricing header, "See the cost before you move": a long receipt of specks printing out of a slot and curling
+   down towards you, the way a company sees every cost before it moves. Each line on it is a line item (a run of
+   specks for the label, a short block for the amount), with dotted separators, and every few lines a total marked
+   with a €. The paper keeps printing slowly; its lines catch the light as they pass the curl; the cursor turns the
+   receipt a little. Teal specks on the light page. */
 {
-  const host = document.querySelector('.pglobe[data-shape="tiers"]');
+  const host = document.querySelector('.pglobe[data-shape="receipt"]');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
     const R = Math.random, TAU = Math.PI * 2;
     const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const glyph = (ch, k = .78, w = 600) => { const S = 180, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
-      g.fillStyle = '#fff'; g.font = `${w} ${S * k}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, S / 2, S * .54);
+    const EUR = (() => { const S = 160, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.font = `700 ${S * .8}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('€', S / 2, S * .54);
       const d = g.getImageData(0, 0, S, S).data, pts = []; for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
-      return pts; };
-    const LET = [glyph('S'), glyph('G'), glyph('P')], EUR = glyph('€');
+      return pts; })();
     const k = mob ? .5 : 1;
-    const PW = 1.25, PH = [2.1, 2.75, 3.4], PX = [-1.75, 0, 1.75], FLOOR = -1.9, RC = .12, COINS = [1, 2, 4], CR = .36, CT = .05, GAP = .13;
-    const parts = []; const add = (kd, i2, x, y, z, w = 0) => parts.push([kd, i2, x, y, z, w]);
-    // 0 panels: rounded outline (dense), face (light), the letter (bright)
-    for (let pi = 0; pi < 3; pi++) { const h = PH[pi];
-      for (let i = 0; i < 2600 * k; i++) { const t = R(); let u, v;
-        if (t < .38) { const s2 = R() * 4; if (s2 < 1) { u = s2 - .5; v = .5; } else if (s2 < 2) { u = .5; v = .5 - (s2 - 1); } else if (s2 < 3) { u = .5 - (s2 - 2); v = -.5; } else { u = -.5; v = -.5 + (s2 - 3); }
-          const ru = RC / PW, rv = RC / h, cu = Math.abs(u) - (.5 - ru), cv = Math.abs(v) - (.5 - rv);
-          if (cu > 0 && cv > 0) { const a = Math.atan2(cv / rv, cu / ru); u = Math.sign(u) * ((.5 - ru) + ru * Math.cos(a)); v = Math.sign(v) * ((.5 - rv) + rv * Math.sin(a)); }
-          add(0, pi, u * PW, (v + .5) * h, (R() - .5) * .04, 1); }
-        else if (t < .7) add(0, pi, (R() - .5) * PW * .96, R() * h, (R() - .5) * .02, 0);
-        else { const p = LET[pi][Math.floor(R() * LET[pi].length)]; add(0, pi, p[0] * .42, h * .56 + p[1] * .42, .04, 2); } } }
-    // 1 coins on top of each panel (flat discs), plus a standing € coin crowning each stack
-    for (let pi = 0; pi < 3; pi++) for (let c = 0; c < COINS[pi]; c++) for (let i = 0; i < 260 * k; i++) { const a = R() * TAU, t = R();
-      if (t < .55) add(1, pi * 10 + c, CR * Math.cos(a), CT, CR * Math.sin(a)); else if (t < .7) add(1, pi * 10 + c, CR * Math.cos(a), (R() * 2 - 1) * CT, CR * Math.sin(a));
-      else { const r = CR * Math.sqrt(R()); add(1, pi * 10 + c, r * Math.cos(a), CT, r * Math.sin(a)); } }
-    for (let pi = 0; pi < 3; pi++) for (let i = 0; i < 700 * k; i++) { const t = R(), a = R() * TAU, r = .3;
-      if (t < .35) add(2, pi, r * Math.cos(a), r * Math.sin(a), (R() * 2 - 1) * .04); else { const p = EUR[Math.floor(R() * EUR.length)]; add(2, pi, p[0] * r * .62, p[1] * r * .62, .06); } }
-    // 3 the floor: a soft line of specks; 4 drifting specks
-    for (let i = 0; i < 1200 * k; i++) add(3, 0, (R() * 2 - 1) * 3.4, FLOOR + (R() - .5) * .03, (R() - .5) * 1.2);
-    for (let i = 0; i < 1300 * k; i++) add(4, 0, (R() * 2 - 1) * 4.4, (R() * 2 - 1) * 2.8, (R() * 2 - 1) * 1.2);
-    const N = parts.length, seed = new Float32Array(N), dust = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) { seed[i] = R(); const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 2.5 + R() * 3; dust[i * 3] = rad * q * Math.cos(a) * 1.5; dust[i * 3 + 1] = rad * yy; dust[i * 3 + 2] = rad * q * Math.sin(a); }
+    const PW = 1.9, ROW = .26, LEN = 8.2, S0 = 2.9, RC = 1.05, SLOT = 2.2, SPEED = .2;   // paper width, line height, paper length, straight part, curl radius, slot height, print speed
+    const hash = n => { const x = Math.sin(n * 127.1 + 31.7) * 43758.5453; return x - Math.floor(x); };
+    // each speck has a paper position: u across (-.5..5), w along (0..LEN); the type says what it draws
+    const parts = []; const add = (kd, u, w, z = 0) => parts.push([kd, u, w, z]);
+    for (let i = 0; i < 6500 * k; i++) add(0, R() - .5, R() * LEN);                              // 0 the paper, faint
+    for (let i = 0; i < 3000 * k; i++) add(1, R() < .5 ? -.5 : .5, R() * LEN);                    // 1 its two edges
+    // 2 the printed lines
+    const rows = Math.floor(LEN / ROW);
+    for (let r2 = 1; r2 < rows; r2++) {
+      const w0 = r2 * ROW, kind = r2 % 9 === 0 ? 'total' : r2 % 9 === 8 ? 'sep' : 'item';
+      if (kind === 'sep') { for (let i = 0; i < 120 * k; i++) { const d = Math.floor(R() * 26); add(2, -.42 + (d + R() * .4) / 26 * .84, w0 + (R() - .5) * .02); } }
+      else if (kind === 'item') { const l = .25 + hash(r2) * .38, n = Math.round(150 * k);
+        for (let i = 0; i < n; i++) { const right = R() < .3; const u = right ? .42 - R() * .16 : -.42 + R() * l; add(2, u, w0 + (R() - .5) * .07); } }
+      else { for (let i = 0; i < 380 * k; i++) { const p = EUR[Math.floor(R() * EUR.length)]; add(3, -.33 + p[0] * .07, w0 + p[1] * .1); }       // € and a bold bar for the total
+             for (let i = 0; i < 300 * k; i++) add(3, .1 + R() * .32, w0 + (R() - .5) * .1); }
+    }
+    // 4 the slot it prints from
+    for (let i = 0; i < 1600 * k; i++) add(4, (R() - .5) * 1.18, (R() - .5) * .14, (R() - .5) * .34);
+    // 5 drifting specks
+    for (let i = 0; i < 1300 * k; i++) add(5, (R() * 2 - 1) * 4.2, (R() * 2 - 1) * 2.6, (R() * 2 - 1) * 1.2);
+    const N = parts.length, seed = new Float32Array(N); for (let i = 0; i < N; i++) seed[i] = R();
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
@@ -994,7 +992,7 @@ if (hosts.length) {
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.NormalBlending,
       vertexShader: `attribute float aA, aS, aH, rnd; uniform float uPx; varying vec3 vCol; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.15 + rnd * 1.1) * (10. / -mv.z);
+          gl_PointSize = uPx * aS * (1.1 + rnd * 1.05) * (10. / -mv.z);
           vCol = mix(mix(vec3(.04, .17, .19), vec3(.3, .5, .52), fract(rnd * 3.7)), vec3(.05, .33, .36), aH); vA = aA; }`,
       fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
         gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
@@ -1003,45 +1001,44 @@ if (hosts.length) {
     let W = 0, H = 0;
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
-      camera.position.set(0, 1.1, 11); camera.lookAt(0, -.05, 0); camera.updateProjectionMatrix();
+      camera.position.set(0, .3, 11); camera.lookAt(0, -.1, 0); camera.updateProjectionMatrix();
       const halfH = 11 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
-      grp.scale.setScalar(Math.min(1.3, halfW * 2 * .94 / 6.2, halfH * 2 * .94 / 6.2));
+      grp.scale.setScalar(Math.min(1.5, halfH * 2 * .96 / 4.9, halfW * 2 * .96 / 4.2)); grp.position.y = -.15;
       U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
     size(); new ResizeObserver(size).observe(host);
-    const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0, inside = false;
-    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; inside = true; kick(); });
-    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; inside = false; });
-    const lift = [0, 0, 0], v3 = new THREE.Vector3();
+    const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
+    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
+    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
+    // where a point of the paper is, given how far it has come out of the slot (s): straight down, then curling forward
+    // and up towards the viewer, in a spiral that tightens
+    const at = sArc => { if (sArc < S0) return [SLOT - sArc, 0];
+      let a = (sArc - S0) / RC; const rc = RC * Math.max(.55, 1 - a * .09);
+      return [SLOT - S0 - rc * Math.sin(a), rc * (1 - Math.cos(a))]; };
     let t = 0, on = false, running = false, last = performance.now(), born = null;
     const frame = now => {
       const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
       if (born === null) born = now; const age = reduce ? 9 : (now - born) / 1000;
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
-      // which panel is nearest the cursor (in screen space)
-      for (let pi = 0; pi < 3; pi++) { v3.set(PX[pi], FLOOR + PH[pi] * .5, 0).applyMatrix4(grp.matrixWorld).project(camera);
-        const want = inside ? Math.max(0, 1 - Math.abs(v3.x - mx) * 2.4) : 0; lift[pi] += (want * .22 - lift[pi]) * Math.min(1, dt * 5); }
-      const rise = [0, 1, 2].map(pi => sm(.2 + pi * .35, 1.4 + pi * .35, age));   // the panels rise in turn
-      const scan = ((t * .18) % 1.4) - .2;                                      // the light line, left to right across all three
-      const cyc = (age % 12);                                                    // coins drop in every 12 s, in turn
+      const intro = sm(0, 2.2, age), out = t * SPEED;                         // how much paper has come out
       for (let i = 0; i < N; i++) {
-        const q = parts[i], kd = q[0], o = i * 3, r = seed[i]; let x, y, z, a = .85, s = 1, h = 0;
-        if (kd === 0) { const pi = q[1], fl = Math.sin(t * .8 + pi * 1.3) * .04 + lift[pi];
-          x = PX[pi] + q[2]; y = FLOOR + q[3] + fl; z = q[4];
-          a = q[5] === 1 ? .8 : q[5] === 2 ? .9 : .16; s = q[5] === 2 ? 1.05 : q[5] === 0 ? .8 : .95; h = q[5] === 2 ? .7 : 0;
-          const u = (x / 3.6 + .5); const d = Math.abs(u - scan); if (d < .05) { a = Math.max(a, .7); h = Math.max(h, 1 - d * 20); }
-          const e = rise[pi]; x = dust[o] + (x - dust[o]) * e; y = dust[o + 1] + (y - dust[o + 1]) * e; z = dust[o + 2] + (z - dust[o + 2]) * e; a *= .3 + .7 * e; }
-        else if (kd === 1) { const pi = Math.floor(q[1] / 10), c = q[1] % 10, fl = Math.sin(t * .8 + pi * 1.3) * .04 + lift[pi];
-          const d0 = 2.2 + pi * .5 + c * .35, f = Math.min(1, Math.max(0, (age - d0) / .5)), fall = (1 - f * f) * 2.2;   // first drop, then rest
-          x = PX[pi] + q[2]; y = FLOOR + PH[pi] + fl + .06 + c * GAP + q[3] + fall; z = q[4]; a = age > d0 ? .85 : 0; }
-        else if (kd === 2) { const pi = q[1], fl = Math.sin(t * .8 + pi * 1.3) * .04 + lift[pi], sw = Math.sin(t * .7 + pi) * .4, cs = Math.cos(sw), sn = Math.sin(sw);
-          const d0 = 2.2 + pi * .5 + COINS[pi] * .35, f = Math.min(1, Math.max(0, (age - d0) / .5)), fall = (1 - f * f) * 2.2;
-          x = PX[pi] + q[2] * cs + q[4] * sn; y = FLOOR + PH[pi] + fl + .06 + COINS[pi] * GAP + .32 + q[3] + fall; z = -q[2] * sn + q[4] * cs; a = age > d0 ? .9 : 0; h = .4; }
-        else if (kd === 3) { x = q[2]; y = q[3]; z = q[4]; a = .25 * sm(0, 1, age); s = .8; }
-        else { x = q[2] + Math.sin(t * .3 + r * 50) * .1; y = q[3] + Math.cos(t * .27 + r * 40) * .1; z = q[4]; a = .1 + .2 * r; s = .7; }
+        const q = parts[i], kd = q[0], o = i * 3, r = seed[i]; let x, y, z, a = .8, s = 1, h = 0;
+        if (kd <= 3) {
+          const sArc = ((q[2] + out) % LEN);                                    // the paper keeps moving out
+          const shown = sArc < LEN * intro;                                     // first time: it prints out from the slot
+          const [yy, zz] = at(sArc), [y2, z2] = at(sArc + .01), ny = -(z2 - zz), nz = (y2 - yy), nl = Math.hypot(ny, nz) || 1;
+          const lift = kd >= 2 ? .012 : 0;                                      // print sits just on the surface
+          x = q[1] * PW; y = yy + ny / nl * lift; z = zz + nz / nl * lift;
+          const fade = 1 - sm(LEN - 2.2, LEN - .2, sArc);                       // the far end fades out
+          a = (kd === 0 ? .16 : kd === 1 ? .62 : kd === 2 ? .85 : .95) * fade * (shown ? 1 : 0);
+          s = kd === 0 ? .75 : kd === 3 ? 1.05 : .9;
+          const curl = Math.abs(sArc - S0 - .8); if (kd >= 2 && curl < .6) h = (1 - curl / .6) * .8;   // lines catch the light at the curl
+        }
+        else if (kd === 4) { x = q[1] * PW; y = SLOT + .08 + q[2]; z = q[3]; a = .6; s = .85; }
+        else { x = q[1] + Math.sin(t * .3 + r * 50) * .1; y = q[2] + Math.cos(t * .27 + r * 40) * .1; z = q[3]; a = .1 + .2 * r; s = .7; }
         pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s; hi[i] = h;
       }
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aH.needsUpdate = true;
-      grp.rotation.y = -.32 + sx * .22 + Math.sin(t * .2) * .05; grp.rotation.x = .08 + sy * .08;
+      grp.rotation.y = -.55 + sx * .3 + Math.sin(t * .2) * .06; grp.rotation.x = .12 + sy * .1;
       renderer.render(scene, camera);
       if (on && !reduce) requestAnimationFrame(frame); else running = false;
     };
