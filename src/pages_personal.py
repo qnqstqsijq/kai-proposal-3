@@ -7,7 +7,7 @@ PAGES["P-03"] = dict(level=3,
     title="Cards | Virtual cards funded from your balances | Kai",
     desc="Prepaid virtual cards funded from your Kai balances, with Apple Pay and Google Pay, instant freeze and fees shown in the open.",
     sections=[
-        dict(t="hero", variant="pin", fan=True, eyebrow="Cards", h1="Cards funded from your Kai balances",
+        dict(t="hero", variant="pin", fan=True, ui_center=True, eyebrow="Cards", h1="Cards funded from your Kai balances",
              sub="Prepaid virtual cards for online and in store, with Apple Pay and Google Pay.", buttons=[WAIT],
              visual=dict(photo="/assets/media/03-supplier-f.jpg", eager=True, title="Cards", chip="Virtual",
                          card=dict(last="4821", label="Virtual card"),
@@ -19,8 +19,8 @@ PAGES["P-03"] = dict(level=3,
             ("account", "Physical card.", "A physical card on a major card network, for your Kai balances."),
             ("shield", "Instant control.", "Freeze and unfreeze a card in one tap."),
         ], line="Later, an agent is designed to spend only within limits you set, and to ask you first."),
-        FEES_BAND,
-        dict(t="promos", items=[("Crypto & Stablecoins", "/personal/crypto/"), ("Agents", "/personal/agents/")]),
+        dict(FEES_BAND, dust=False),                             # no dust over this banner
+        dict(t="promos", items=[("Crypto & Stablecoins", "/personal/crypto/", "/assets/media/cards-crypto.jpg"), ("Agents", "/personal/agents/", "/assets/media/cards-agents.jpg")]),   # stills for now, videos later
         dict(t="final", **FINAL),
     ])
 

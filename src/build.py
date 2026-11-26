@@ -289,11 +289,13 @@ def vis_ui(v, level):
     # every UI frame: a people video (the homepage's own clips, taken in turn) with the cube footage laid over it,
     # as on the homepage UI sections
     global _UI_VID
-    if v.get("clip"):
-        clip = v["clip"]                                  # this frame's own video
+    if v.get("clip") or v.get("still"):
+        clip = v.get("clip")                              # this frame's own video (or a still, below)
     else:
         clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
-    img = (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
+    first = (f'<img class="stage__img" data-par src="{v["still"]}" alt="" loading="lazy" data-photo>' if v.get("still")   # a still for now, video later
+             else f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
+    img = (first +
            f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>')
     p = []
     if v.get("title") or v.get("chip"):
@@ -889,7 +891,8 @@ def s_final(s, level):
 def s_promos(s, level):
     """One full section per linked page, built from that page's own hero: name, headline, subline and visual."""
     out = []
-    for i, (label, url) in enumerate(s["items"]):
+    for i, it in enumerate(s["items"]):
+        label, url = it[0], it[1]
         target = BY_URL[url]
         spec = pages.PAGES.get(target["code"]) or {}
         hero = next((x for x in spec.get("sections", []) if x["t"] == "hero"), None)
@@ -898,6 +901,8 @@ def s_promos(s, level):
         vis = hero.get("visual")
         if isinstance(vis, dict):
             vis = {k: v for k, v in vis.items() if k not in ("eager", "float")}
+            if len(it) > 2:
+                vis["still"] = it[2]                          # this page's own still in that frame
         out.append(s_split(dict(eyebrow=target["label"], h2=hero["h1"], body=hero.get("sub", ""), visual=vis,
                                 rev=(i % 2 == 1), ctas=[(label, url)]), level))
     return "\n".join(out)
