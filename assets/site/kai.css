@@ -1434,5 +1434,5 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 @media (max-width:1100px){.flow__scr{position:relative;left:auto;right:auto;bottom:auto}}
 
 /* a particle scene in the hero, in place of the frame (Pricing): open, no box */
-.pglobe--hero{position:relative!important;inset:auto!important;transform:none!important;width:calc(100% + var(--gutter))!important;height:clamp(calc(var(--u)*380),40vw,calc(var(--u)*720))!important;pointer-events:none}
+.pglobe--hero{position:relative!important;inset:auto!important;transform:none!important;width:calc(100% + var(--gutter))!important;height:clamp(calc(var(--u)*460),48vw,calc(var(--u)*900))!important;margin-block:calc(var(--u)*-40);pointer-events:none}
 .pglobe--hero canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}

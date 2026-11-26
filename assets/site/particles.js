@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -700,12 +700,14 @@ if (hosts.length) {
 }
 
 
-/* Pricing header, "See the cost before you move": a coin carrying the € goes into a glass prism and comes out the other
-   side split in the open, a large coin with what arrives (£) and a small one with the fee (%), on two rays, like light
-   split into its colours. It plays as you scroll the header off (and gently on its own), a thin beam of specks always
-   runs through the prism, the coins turn softly, and the cursor tilts the scene. Teal specks on the light page. */
+/* Pricing header, "See the cost before you move": a large balance made of specks. On the left pan sits what you send,
+   a stack of coins with a € coin standing on top; the right pan starts empty, so the beam leans left. One by one, coins
+   drop into the right pan, a stack with a £ coin (what arrives), and last a small % coin (the fee). With the fee in,
+   the beam swings level and settles: everything weighed and shown before you move; a soft ring pulses at the pivot.
+   Then the right pan empties and it starts again (about 11 s). The beam swings on a spring, the cursor tilts the
+   scene, and fine specks drift around it. Teal specks on the light page. */
 {
-  const host = document.querySelector('.pglobe[data-shape="prism"]');
+  const host = document.querySelector('.pglobe[data-shape="scale"]');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
     const R = Math.random, TAU = Math.PI * 2;
@@ -715,32 +717,44 @@ if (hosts.length) {
       const d = g.getImageData(0, 0, S, S).data, pts = []; for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
       return pts; };
     const EUR = glyph('€'), GBP = glyph('£'), PCT = glyph('%', .62, 700);
-    const coin = (G, r, th) => { const t = R(), a = R() * TAU;                                   // a standing coin, facing the viewer
-      if (t < .3) return [r * Math.cos(a), r * Math.sin(a), (R() * 2 - 1) * th];
-      if (t < .42) { const q = r * .84; return [q * Math.cos(a), q * Math.sin(a), th * 1.1]; }
-      if (t < .55) { const q = r * Math.sqrt(R()); return [q * Math.cos(a), q * Math.sin(a), (R() < .5 ? -1 : 1) * th]; }
-      const p = G[Math.floor(R() * G.length)]; return [p[0] * r * .62, p[1] * r * .62, th * 1.25]; };
-    // the prism: a triangular glass bar, edges dense, faces faint
-    // the classic prism: a triangle facing the viewer (point up), with a little depth
-    const PD = .8, PR = 1.15, tri = [0, 1, 2].map(i => [Math.cos(i * TAU / 3 + Math.PI / 2) * PR, Math.sin(i * TAU / 3 + Math.PI / 2) * PR - .2]);
-    const PH = 2 * PR;
-    const prismPt = () => { const t = R();
-      const i = Math.floor(R() * 3), a = tri[i], b = tri[(i + 1) % 3], f = R();
-      if (t < .62) { if (R() < .82) { const z = (R() < .5 ? -.5 : .5) * PD; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z]; }   // the two triangles (front, back)
-        return [a[0], a[1], (R() - .5) * PD]; }                                                                     // the depth edges
-      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, (R() - .5) * PD]; };                              // side faces, faint
     const k = mob ? .5 : 1;
-    const NIN = Math.round(3400 * k), NPR = Math.round(3600 * k), NRAY = Math.round(1500 * k), NAMB = Math.round(1600 * k);
-    const NBIG = Math.round(NIN * .78);                                      // most of the coin arrives; the rest is the fee
-    const N = NIN + NPR + NRAY + NAMB;
-    const A = new Float32Array(N * 3), B = new Float32Array(N * 3), kind = new Uint8Array(N), seed = new Float32Array(N);
-    const IN = [-3.05, .05, 0], BIG = [3.0, .5, 0], FEE = [2.5, -1.15, .2];
-    let n = 0;
-    for (let i = 0; i < NIN; i++, n++) { const a = coin(EUR, .9, .075); A.set(a, n * 3);
-      const b = i < NBIG ? coin(GBP, .82, .07) : coin(PCT, .36, .045); B.set(b, n * 3); kind[n] = i < NBIG ? 0 : 1; seed[n] = R(); }
-    for (let i = 0; i < NPR; i++, n++) { A.set(prismPt(), n * 3); kind[n] = 2; seed[n] = R(); }
-    for (let i = 0; i < NRAY; i++, n++) { kind[n] = 3; seed[n] = R(); }
-    for (let i = 0; i < NAMB; i++, n++) { A.set([(R() * 2 - 1) * 4.6, (R() * 2 - 1) * 2.3, (R() * 2 - 1) * 1.4], n * 3); kind[n] = 4; seed[n] = R(); }
+    // geometry (y up): pivot, beam, pans hanging below its ends
+    const PIV = [0, 1.55, 0], HALF = 2.35, DROP = 1.55, PANR = .95, CR = .5, CT = .045, GAP = .115;
+    const NL = 6, NRC = 5;                                                     // coins: left stack; right stack (+ the fee coin)
+    // parts as local point lists, with a part id; positions are worked out every frame
+    const parts = [];                                                          // [kind, sub, x, y, z, weight]
+    const add = (kind, sub, x, y, z, w = 1) => parts.push([kind, sub, x, y, z, w]);
+    // 0 post and base (fixed)
+    for (let i = 0; i < 1600 * k; i++) { const t = R();
+      if (t < .55) add(0, 0, (R() - .5) * .08, -2.15 + R() * 3.7, (R() - .5) * .08);
+      else { const a = R() * TAU, r = .9 * Math.sqrt(R()) * (t < .8 ? 1 : 0) + (t >= .8 ? .9 : 0); add(0, 0, r * Math.cos(a), -2.15 + (R() * .05), r * Math.sin(a) * .35); } }
+    for (let i = 0; i < 500 * k; i++) { const a = R() * TAU, r = .13; add(0, 0, r * Math.cos(a), PIV[1] + r * Math.sin(a), 0); }   // the pivot ring
+    // 1 beam (rotates about the pivot): a slim bar with tapered ends
+    for (let i = 0; i < 2600 * k; i++) { const u = R() * 2 - 1, th = .07 * (1 - .5 * Math.abs(u)); add(1, 0, u * HALF, (R() - .5) * th * 2, (R() - .5) * .06); }
+    // 2 chains (three per side; drawn between the beam end and the pan rim each frame)
+    for (let s2 = 0; s2 < 2; s2++) for (let c = 0; c < 3; c++) for (let i = 0; i < 260 * k; i++) add(2, s2 * 3 + c, R(), 0, 0);
+    // 3 pans: a shallow dish (hangs level below each beam end)
+    for (let s2 = 0; s2 < 2; s2++) for (let i = 0; i < 2200 * k; i++) { const a = R() * TAU, t = R();
+      if (t < .5) add(3, s2, PANR * Math.cos(a), 0, PANR * Math.sin(a));
+      else { const r = PANR * Math.sqrt(R()); add(3, s2, r * Math.cos(a), -.16 * (1 - (r / PANR) ** 2), r * Math.sin(a)); } }
+    // 4 coins in stacks: left NL coins, right NRC coins; each coin a flat disc
+    const coinFlat = (kind, sub, slot) => { for (let i = 0; i < 230 * k; i++) { const a = R() * TAU, t = R();
+      if (t < .5) add(kind, sub, CR * Math.cos(a), CT, CR * Math.sin(a), slot);
+      else if (t < .65) add(kind, sub, CR * Math.cos(a), (R() * 2 - 1) * CT, CR * Math.sin(a), slot);
+      else { const r = CR * Math.sqrt(R()); add(kind, sub, r * Math.cos(a), CT, r * Math.sin(a), slot); } } };
+    for (let c = 0; c < NL; c++) coinFlat(4, 0, c);
+    for (let c = 0; c < NRC; c++) coinFlat(4, 1, c);
+    // 5 standing coins with a symbol: € on the left stack, £ on the right stack, % (the fee) beside it
+    const coinUp = (G, r, sub) => { for (let i = 0; i < 1100 * k * (r > .3 ? 1 : .5); i++) { const t = R(), a = R() * TAU;
+      if (t < .3) add(5, sub, r * Math.cos(a), r * Math.sin(a), (R() * 2 - 1) * .06);
+      else if (t < .45) { const q = r * .84; add(5, sub, q * Math.cos(a), q * Math.sin(a), .07); }
+      else { const p = G[Math.floor(R() * G.length)]; add(5, sub, p[0] * r * .62, p[1] * r * .62, .09); } } };
+    coinUp(EUR, .46, 0); coinUp(GBP, .46, 1); coinUp(PCT, .27, 2);
+    // 6 drifting specks
+    for (let i = 0; i < 1400 * k; i++) add(6, 0, (R() * 2 - 1) * 4.4, (R() * 2 - 1) * 2.6, (R() * 2 - 1) * 1.2);
+    // 7 the pulse ring at the pivot when it settles
+    for (let i = 0; i < 700 * k; i++) add(7, 0, R(), 0, 0);
+    const N = parts.length, seed = new Float32Array(N); for (let i = 0; i < N; i++) seed[i] = R();
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
@@ -753,7 +767,7 @@ if (hosts.length) {
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.NormalBlending,
       vertexShader: `attribute float aA, aS, rnd; uniform float uPx; varying vec3 vCol; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.25 + rnd * 1.1) * (9. / -mv.z); vA = aA; vCol = mix(vec3(.04, .17, .19), vec3(.3, .5, .52), fract(rnd * 3.7)); }`,
+          gl_PointSize = uPx * aS * (1.2 + rnd * 1.1) * (10. / -mv.z); vA = aA; vCol = mix(vec3(.04, .17, .19), vec3(.3, .5, .52), fract(rnd * 3.7)); }`,
       fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
         gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
     const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
@@ -761,59 +775,68 @@ if (hosts.length) {
     let W = 0, H = 0;
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
-      camera.position.set(0, .4, 10); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
-      const halfH = 10 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
-      grp.scale.setScalar(Math.min(1.3, halfW * 2 * .96 / 7.6, halfH * 2 * .92 / 3.4));
+      camera.position.set(0, .9, 11); camera.lookAt(0, -.15, 0); camera.updateProjectionMatrix();
+      const halfH = 11 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
+      grp.scale.setScalar(Math.min(1.25, halfW * 2 * .94 / 6.6, halfH * 2 * .96 / 5.1));
       U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
     size(); new ResizeObserver(size).observe(host);
     const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
     zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
     zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
-    // the split plays by itself once (and repeats slowly), and scrolling the header away moves it along too
-    const target = () => { const r = zone.getBoundingClientRect(); return Math.min(1, Math.max(0, -r.top / (innerHeight * .5))); };
-    let t = 0, p = 0, on = false, running = false, last = performance.now(), born = null;
-    const lerp = (a, b, f) => a + (b - a) * f;
+    // the story clock (s): coins drop at these times; the fee drops last
+    const CYC = 11, DROPS = [1.0, 1.7, 2.4, 3.1, 3.8, 4.9];                  // five £ coins, then the % fee
+    const FALL = .55;                                                         // seconds to fall into the pan
+    let t = 0, ang = .2, vel = 0, on = false, running = false, last = performance.now(), t0 = null;
     const frame = now => {
       const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
-      if (born === null) born = now;
-      // own clock: rests whole, splits, holds, comes back together, every 9 s; scrolling pushes it to "split"
-      const cyc = reduce ? .55 : ((now - born) / 1000 % 9) / 9;
-      const own = cyc < .12 ? 0 : cyc < .45 ? sm(.12, .45, cyc) : cyc < .85 ? 1 : 1 - sm(.85, 1, cyc);
-      const tg = Math.max(own, target()); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 2.6);
+      if (t0 === null) t0 = now;
+      const c = reduce ? 7 : ((now - t0) / 1000) % CYC;
+      const out = sm(9.6, 10.6, c);                                           // the right pan empties at the end
+      const landed = DROPS.map(d => c > d + FALL ? 1 : 0);
+      const wR = (landed.slice(0, 5).reduce((a, b) => a + b, 0) + landed[5]) * (1 - out), wL = NL;
+      const goal = Math.max(-.22, Math.min(.22, (wL - wR) * .045));           // leans to the heavier side
+      vel += ((goal - ang) * 26 - vel * 3.4) * dt; ang += vel * dt;            // on a spring, so it swings and settles
+      if (reduce) ang = 0;
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
-      const swIn = Math.sin(t * .6) * .35, swOut = Math.sin(t * .5 + 1) * .3;
+      const ca = Math.cos(ang), sa = Math.sin(ang);
+      const end = s2 => { const ex = (s2 ? 1 : -1) * HALF; return [PIV[0] + ex * ca, PIV[1] + ex * sa, 0]; };  // beam ends (left one lower when ang > 0)
+      const E = [end(0), end(1)], P = E.map(e => [e[0], e[1] - DROP, 0]);
+      const settled = Math.max(0, 1 - Math.abs(ang) * 20) * sm(5.5, 6.6, c) * (1 - sm(9.2, 9.8, c));
+      const pulse = sm(5.8, 6.4, c) * (1 - sm(7.2, 8.4, c));
       for (let i = 0; i < N; i++) {
-        const o = i * 3, kd = kind[i], r = seed[i]; let x, y, z, a = .9, s = 1;
-        if (kd <= 1) {                                                         // the coin: in → through the prism → out, split
-          const e = sm(r * .35, .65 + r * .35, p);                              // each speck goes at its own moment
-          const ca = Math.cos(swIn), sa = Math.sin(swIn), co = Math.cos(swOut), so = Math.sin(swOut);
-          const ax = IN[0] + A[o] * ca + A[o + 2] * sa, ay = IN[1] + A[o + 1], az = IN[2] - A[o] * sa + A[o + 2] * ca;
-          const T = kd === 0 ? BIG : FEE, bx = T[0] + B[o] * co + B[o + 2] * so, by = T[1] + B[o + 1], bz = T[2] - B[o] * so + B[o + 2] * co;
-          // through the prism: a curve with the prism's centre as its middle point, spread inside the glass
-          const mxp = (r - .5) * .7, myp = -.2 + (Math.sin(r * 91) * .5) * .9;
-          if (e < .5) { const f = e * 2; x = lerp(ax, mxp, f * f); y = lerp(ay, myp, f); z = lerp(az, 0, f); }
-          else { const f = (e - .5) * 2; x = lerp(mxp, bx, 1 - (1 - f) * (1 - f)); y = lerp(myp, by, f); z = lerp(0, bz, f); }
-          a = .9 - Math.sin(Math.PI * e) * .35; s = kd === 1 ? .9 : 1; }
-        else if (kd === 2) {                                                   // the prism, turning a little
-          const tr = -.35 + Math.sin(t * .3) * .12, c = Math.cos(tr), sn = Math.sin(tr);
-          x = A[o] * c + A[o + 2] * sn; y = A[o + 1]; z = -A[o] * sn + A[o + 2] * c;
-          const edge = Math.abs(Math.abs(A[o + 2]) - PD / 2) < .001 || Math.abs(Math.hypot(A[o], A[o + 1] + .2) - PR) < .01;
-          a = (edge ? .55 : .14) + Math.sin(Math.PI * p) * .25; s = edge ? .9 : .75; }
-        else if (kd === 3) {                                                   // the beam: in, then out on two rays
-          const u = (r * 7 + t * .22) % 1, toFee = r < .38;
-          if (u < .45) { const f = u / .45; x = lerp(IN[0] + .95, -.1, f); y = lerp(IN[1], -.15, f) + Math.sin(r * 60) * .03; z = 0; }
-          else { const f = (u - .45) / .55, T = toFee ? FEE : BIG; x = lerp(.1, T[0] - (toFee ? .42 : .88), f); y = lerp(-.15, T[1], f) + Math.sin(r * 60) * .03 * (1 + f); z = 0; }
-          a = (.26 + .3 * Math.sin(u * Math.PI)) * (.5 + .5 * Math.sin(Math.PI * Math.min(1, p * 1.2 + .3))); s = .75; }
-        else { x = A[o] + Math.sin(t * .3 + r * 50) * .1; y = A[o + 1] + Math.cos(t * .27 + r * 40) * .1; z = A[o + 2]; a = .1 + .22 * r; s = .7; }
+        const q = parts[i], kd = q[0], sub = q[1], o = i * 3, r = seed[i]; let x = q[2], y = q[3], z = q[4], a = .85, s = 1;
+        if (kd === 0) { a = .55; }
+        else if (kd === 1) { const lx = q[2], ly = q[3]; x = PIV[0] + lx * ca - ly * sa; y = PIV[1] + lx * sa + ly * ca; a = .9; }
+        else if (kd === 2) { const side = sub < 3 ? 0 : 1, cc = sub % 3, aa = cc / 3 * TAU + .5;          // chains: beam end → pan rim
+          const e = E[side], pr = [P[side][0] + PANR * .96 * Math.cos(aa), P[side][1], PANR * .96 * Math.sin(aa)], f = q[2];
+          x = e[0] + (pr[0] - e[0]) * f; y = e[1] + (pr[1] - e[1]) * f; z = e[2] + (pr[2] - e[2]) * f; a = .45; s = .8; }
+        else if (kd === 3) { x = P[sub][0] + q[2]; y = P[sub][1] + q[3]; z = q[4]; a = .7; }
+        else if (kd === 4) {                                                   // stacked coins
+          const slot = q[5], base = P[sub][1] + .04 + slot * GAP;
+          if (sub === 0) { x = P[0][0] + q[2]; y = base + q[3]; z = q[4]; }
+          else { const d0 = DROPS[slot], f = Math.min(1, Math.max(0, (c - d0) / FALL)), fall = 1 - f * f;   // falls in with gravity
+            x = P[1][0] + q[2]; y = base + q[3] + fall * 3.2; z = q[4]; a = (c > d0 ? .85 : 0) * (1 - out); }
+        }
+        else if (kd === 5) {                                                   // the standing coins with € / £ / %
+          const sway = Math.sin(t * .8 + sub * 2) * .35, cs = Math.cos(sway), sn = Math.sin(sway);
+          const lx = q[2] * cs + q[4] * sn, lz = -q[2] * sn + q[4] * cs;
+          if (sub === 0) { x = P[0][0] + lx; y = P[0][1] + .04 + NL * GAP + .46 + q[3]; z = lz; }
+          else if (sub === 1) { const f = Math.min(1, Math.max(0, (c - DROPS[4]) / FALL)), fall = 1 - f * f;
+            x = P[1][0] - .18 + lx; y = P[1][1] + .04 + NRC * GAP + .46 + q[3] + fall * 3.2; z = lz; a = (c > DROPS[4] ? .9 : 0) * (1 - out); }
+          else { const f = Math.min(1, Math.max(0, (c - DROPS[5]) / FALL)), fall = 1 - f * f;
+            x = P[1][0] + .6 + lx; y = P[1][1] + .04 + .27 + q[3] + fall * 3.2; z = lz + .25; a = (c > DROPS[5] ? .95 : 0) * (1 - out); s = 1.05; }
+        }
+        else if (kd === 6) { x += Math.sin(t * .3 + r * 50) * .1; y += Math.cos(t * .27 + r * 40) * .1; a = .1 + .2 * r; s = .7; }
+        else { const aa = q[2] * TAU, rad = .25 + pulse * 1.6; x = PIV[0] + Math.cos(aa) * rad; y = PIV[1] + Math.sin(aa) * rad; z = 0;
+          a = pulse > 0 ? Math.sin(Math.PI * Math.min(1, pulse)) * .6 * settled + .0 : 0; s = .85; }
         pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s;
       }
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true;
-      grp.rotation.y = sx * .28 + Math.sin(t * .2) * .06; grp.rotation.x = sy * .12;
+      grp.rotation.y = -.18 + sx * .3 + Math.sin(t * .2) * .05; grp.rotation.x = .06 + sy * .1;
       renderer.render(scene, camera);
       if (on && !reduce) requestAnimationFrame(frame); else running = false;
     };
     function kick() { if (running || !on) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
     new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
-    addEventListener('scroll', kick, { passive: true });
   }
 }
