@@ -570,7 +570,7 @@ def s_cards(s, level):
     scenes = [(list(it) + [None] * 5)[4] or scenes[i] for i, it in enumerate(items)]   # a card can name its own scene
     for i, it in enumerate(items):
         ic, t, d, u = (list(it) + [None] * 4)[:4]
-        FIGMA_ICONS = ("kyb", "iban", "stocks", "key", "tag", "chats", "pricing", "movemoney", "payments", "shownfirst", "everymove", "approvepay")   # Figma pictograms named on purpose win over the homepage icon
+        FIGMA_ICONS = ("kyb", "iban", "stocks", "key", "tag", "chats", "pricing", "movemoney", "payments", "shownfirst", "everymove", "approvepay", "convertmove", "operator", "control")   # Figma pictograms named on purpose win over the homepage icon
         ico = (icon(ic, "card__ico") if ic in FIGMA_ICONS else (home_icon(t, "card__ico", s.get("dark")) or icon(ic, "card__ico"))) if ic else ""
         text = f"{ico}<h3>{esc(t)}</h3>" + (f"<p>{esc(d)}</p>" if d else "")
         sc = f' data-scene="{scenes[i]}"'

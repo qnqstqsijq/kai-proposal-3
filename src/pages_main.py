@@ -125,14 +125,14 @@ PAGES["H-04"] = dict(level=3,
         dict(t="spread", h2="Your money lives in too many places",
              body="An account for bills, an exchange for crypto, a broker for stocks, a separate card. None of them talk to each other, and none were built for an AI agent to act safely on your behalf."),
         dict(t="cards", dark=True, eyebrow="Unified finance. Unlocked limits.", h2="Four reasons to choose Kai platform", items=[
-            ("account", "Account experience", "Built around a verified person or business. The account is always yours."),
-            ("move", "Cross-asset execution", "Hold, move and spend fiat, crypto, stablecoins and stocks from one balance, with the rate and fees shown first."),
-            ("agent", "Agent access", "Kai's built-in agent is designed to prepare payments and moves for you. Later, connect an agent you already use. An agent connects once to Kai platform, not to every provider."),
-            ("shield", "Control by design", "You set the permissions. Every sensitive move waits for your yes."),
+            ("kyb", "Account experience", "Built around a verified person or business. The account is always yours."),
+            ("convertmove", "Cross-asset execution", "Hold, move and spend fiat, crypto, stablecoins and stocks from one balance, with the rate and fees shown first."),
+            ("operator", "Agent access", "Kai's built-in agent is designed to prepare payments and moves for you. Later, connect an agent you already use. An agent connects once to Kai platform, not to every provider."),
+            ("control", "Control by design", "You set the permissions. Every sensitive move waits for your yes."),
         ], line=AGENT_LINE),
         # scroll-driven like Business accounts › Receive, hold and move: each step plays its action in the widget
         # (still in the frame for now, video later)
-        dict(t="flow", h2="The workflow is the point.",   # frame: plain dark teal until its image is chosen (still="/assets/media/whykai-flow.jpg")
+        dict(t="flow", still="/assets/media/whykai-flow.jpg", h2="The workflow is the point.",   # still for now, video later
              lead="The point is not a longer list of tools. It is one flow: you set the goal, an agent prepares the move, you see the rate and fees, and you approve.",
              steps=[
                 ("You set the goal", "Pay an approved supplier within budget."),
