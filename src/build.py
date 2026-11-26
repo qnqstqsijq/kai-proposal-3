@@ -43,7 +43,10 @@ def ver(path):
 def write_cards3d():
     start = HOME.index("/* Card hovers:")
     mod = HOME[start:HOME.index("</script>", start)]
+    extra = open(os.path.join(ROOT, "src/cards3d_extra.js"), encoding="utf-8").read()
     for old, new in [('"#grid,.bizsec"', '"#grid,.bizsec,.cards,.tiles"'),
+                     ('buildEnv(P);\nconst makers = { deposit, twist, flow, growth, orbit, cards, bars, rise };',
+                      extra + '\nbuildEnv(P);\nconst makers = { deposit, twist, flow, growth, orbit, cards, bars, rise, verify, tiers, talk };'),
                      ('c.querySelector(".nm,.bt")', 'c.querySelector(".nm,.bt,h3")'),
                      ('document.querySelectorAll(".pc,.gpc,.bc").forEach(c => {\n  const key = MAP[',
                       'document.querySelectorAll(".pc,.gpc,.bc,[data-scene]").forEach(c => {\n  const key = c.dataset.scene || MAP[')]:
@@ -471,7 +474,8 @@ def s_band(s, level):
     risk = f'<p class="risk" style="margin-top:12px">{esc(s["risk"])}</p>' if s.get("risk") else ""
     # prominent banner: the moving cubes video inside a dark frame (as the closing banner), glass button
     vid = f'<video class="band__vid" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
-    return (f'<section class="sec--tight"><div class="wrap"><div class="band" data-tone="dark"{R(level)}>{vid}<div><h2>{esc(s["h2"])}</h2>{body}{risk}</div>'
+    nd = "" if s.get("dust", True) else " data-nodust"
+    return (f'<section class="sec--tight"><div class="wrap"><div class="band" data-tone="dark"{nd}{R(level)}>{vid}<div><h2>{esc(s["h2"])}</h2>{body}{risk}</div>'
             + btn(s["cta"][0], href=s["cta"][1], kind="btn1", cls="btn-glass") + "</div></div></section>")
 
 def s_faq(s, level, pid="p"):
@@ -544,6 +548,7 @@ def s_cards(s, level):
     n = s.get("n") or (3 if len(items) in (3, 6, 9) else 2 if len(items) == 2 else 4 if len(items) in (4, 8) else 5 if len(items) == 10 else 3)
     cards = []
     scenes = pick_scenes([(list(it) + [None] * 4)[1] for it in items])
+    scenes = [(list(it) + [None] * 5)[4] or scenes[i] for i, it in enumerate(items)]   # a card can name its own scene
     for i, it in enumerate(items):
         ic, t, d, u = (list(it) + [None] * 4)[:4]
         ico = (home_icon(t, "card__ico", s.get("dark")) or icon(ic, "card__ico")) if ic else ""
@@ -575,7 +580,7 @@ def s_steps(s, level):
     return wrap_sec(s, inner)
 
 STMT_SHAPES = {
-    "Your company money still lives in two stacks.": "twostacks>onestack",
+    "Your company money still lives in two stacks.": "twocoins>kaicoin",
     "Money is split. AI is starting to act.": "split>cube",
     "A Swiss company, member of VQF": "dust>cross",
     "Built in first, to answer questions. Your own agent later.": "node>nodes2",
@@ -587,6 +592,9 @@ STMT_SHAPES = {
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
 }
+
+# shapes drawn larger than the usual radius-1 size (as large as the banner allows)
+STMT_SCALE = {"Your company money still lives in two stacks.": 1.2}
 
 def s_text(s, level):
     body = s.get("body")
@@ -605,7 +613,9 @@ def s_text(s, level):
     # particle animation tied to the section's content (assets/site/particles.js): the dust starts as one shape and
     # becomes another as you scroll; shapes per heading in STMT_SHAPES, globe to cube for anything not listed
     shp = STMT_SHAPES.get(s["h2"], "globe>cube")
-    inner = (f'<div class="stmt"><div class="pglobe" data-shape="{shp}" aria-hidden="true"></div><div class="stmt__h">{eb}<h2 class="h2"{R(level)}>{esc(s["h2"])}</h2></div>'
+    sc = STMT_SCALE.get(s["h2"])
+    sca = f' data-scale="{sc}"' if sc else ""
+    inner = (f'<div class="stmt"><div class="pglobe" data-shape="{shp}"{sca} aria-hidden="true"></div><div class="stmt__h">{eb}<h2 class="h2"{R(level)}>{esc(s["h2"])}</h2></div>'
              f'<div class="stmt__b">{ps}{extra}</div></div>')
     return wrap_sec(s, inner)
 

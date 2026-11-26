@@ -618,7 +618,7 @@ document.querySelectorAll("[data-phero]").forEach(function (sec) {
    then drifts back to rest when the cursor leaves */
 (function () {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  document.querySelectorAll(".band").forEach(function (band) {
+  document.querySelectorAll(".band:not([data-nodust])").forEach(function (band) {
     var cv = document.createElement("canvas"); cv.className = "band__dust"; cv.setAttribute("aria-hidden", "true");
     var vid = band.querySelector(".band__vid"); vid ? vid.after(cv) : band.prepend(cv);
     var cx = cv.getContext("2d"), dpr = Math.min(devicePixelRatio || 1, 2), W = 0, H = 0, P = [], mx = -1e4, my = -1e4, inside = false, run = false, on = false;

@@ -13,7 +13,7 @@ PAGES["B-01"] = dict(level=2,
     sections=[
         dict(t="hero", variant="main", eyebrow="Kai Business", h1="One account for your business. You approve.",
              buttons=[WAIT, SALES],
-             visual=dict(BIZ_TOTAL, photo="/assets/media/05-business-m.jpg", eager=True, float=True, title="Kai Business", chip="One balance")),
+             visual=dict(BIZ_TOTAL, photo="/assets/media/05-business-m.jpg", eager=True, float=True, center=True, title="Kai Business", chip="One balance")),
         dict(t="text", h2="Your company money still lives in two stacks.",
              body="Fiat in one place, crypto in another, and no safe way for an agent to act on the company's behalf."),
         dict(t="cards", dark=True, h2="One account. One balance. You stay in control.", items=[
@@ -29,11 +29,11 @@ PAGES["B-01"] = dict(level=2,
                          msgs=[("me", "How much did we pay suppliers in October?"),
                                ("agent", "€42,180 across 14 payments. Want me to prepare the next supplier run for your approval?")],
                          btn="Review and approve")),
-        BIZ_PRICING_BAND,
+        dict(BIZ_PRICING_BAND, dust=False),                     # no dust over this banner
         dict(t="cards", h2="Three clear next steps.", items=[
-            ("check", "Onboarding", "Verify the business, then the account is yours.", "/business/onboarding/"),
-            ("pie", "Pricing", "Silver, Gold and Platinum plans for Business.", "/business/pricing/"),
-            ("agent", "Talk to sales", "Tell us about your company.", "/business/contact/"),
+            ("key", "Onboarding", "Verify the business, then the account is yours.", "/business/onboarding/", "verify"),
+            ("tag", "Pricing", "Silver, Gold and Platinum plans for Business.", "/business/pricing/", "tiers"),
+            ("chats", "Talk to sales", "Tell us about your company.", "/business/contact/", "talk"),
         ]),
         dict(t="faq", h2="Questions about Kai Business", items=[
             ("Do we need an AI agent to use Kai Business?", None),

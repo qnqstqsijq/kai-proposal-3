@@ -48,6 +48,28 @@ if (hosts.length) {
   const mix = (...parts) => { const tot = parts.reduce((s, p) => s + p[0], 0);
     return () => { let u = R() * tot; for (const [w, f] of parts) { if ((u -= w) <= 0) return f(); } return parts[0][1](); }; };
 
+  // glyph points: a symbol drawn on a small canvas, its filled pixels as points in -1…1 (y up)
+  const glyph = (draw) => { const S = 160, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.strokeStyle = '#fff'; draw(g, S); const d = g.getImageData(0, 0, S, S).data, pts = [];
+    for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
+    return pts.length ? pts : [[0, 0]]; };
+  const EURO = glyph((g, S) => { g.font = `600 ${S * .78}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('€', S / 2, S * .53); });
+  const BTC = glyph((g, S) => { g.font = `700 ${S * .74}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('B', S / 2, S * .53);
+    g.lineWidth = S * .07; [[.42], [.56]].forEach(([x]) => { g.beginPath(); g.moveTo(S * x, S * .1); g.lineTo(S * x, S * .22); g.moveTo(S * x, S * .84); g.lineTo(S * x, S * .96); g.stroke(); }); });
+  const KAI = glyph((g, S) => { g.translate(S * .1, S * .1); g.scale(S * .8 / 104, S * .8 / 104);
+    ['M43.2773 67.3906C49.2947 66.5932 55.2169 66.4682 61.0439 67.0117V66.9922L61.6895 67.0732C72.8282 68.208 82.4104 71.7968 90.4355 77.8398L75.417 92.374L61.6895 79.1318L61.6875 79.1289V103.032C61.6875 103.678 61.3647 104.002 60.7188 104.002H43.2773C42.6315 104.002 42.3086 103.678 42.3086 103.032V68.3115C42.3086 67.6657 42.6315 67.3584 43.2773 67.3906Z',
+     'M35.6895 42.3115C36.3354 42.3115 36.6427 42.6343 36.6104 43.2803C37.4077 49.297 37.5326 55.2184 36.9893 61.0449H37.0078L36.9336 61.6279C36.9315 61.6487 36.9308 61.6697 36.9287 61.6904H36.9268C35.792 72.8291 32.2032 82.4114 26.1602 90.4365L11.626 75.417L24.8682 61.6904H0.96875C0.323023 61.6904 0.000106046 61.3674 0 60.7217V43.2803C0 42.6344 0.322917 42.3116 0.96875 42.3115H35.6895Z',
+     'M92.374 28.584L79.1318 42.3115H103.031C103.677 42.3116 104 42.6344 104 43.2803V60.7217C104 61.3674 103.677 61.6904 103.031 61.6904H68.3105C67.6647 61.6904 67.3575 61.3674 67.3896 60.7217C66.5923 54.705 66.4675 48.7834 67.0107 42.957H66.9922L67.0654 42.3721C67.0675 42.3519 67.0692 42.3317 67.0713 42.3115H67.0732C68.208 31.1728 71.7968 21.5905 77.8398 13.5654L92.374 28.584Z',
+     'M60.7227 0C61.3684 6.34367e-05 61.6913 0.323029 61.6914 0.96875V35.6904C61.6913 36.3361 61.3684 36.6426 60.7227 36.6104C54.7053 37.4078 48.7831 37.5318 42.9561 36.9883V37.0098L42.3105 36.9287C31.1718 35.794 21.5896 32.2052 13.5645 26.1621L28.583 11.6279L42.3105 24.8701L42.3125 24.8721V0.96875C42.3126 0.322966 42.6354 0 43.2812 0H60.7227Z'
+    ].forEach(d => g.fill(new Path2D(d))); });
+  // a coin standing up, facing you: rim, faces, a raised inner ring, and its symbol in relief on both faces
+  const faceCoin = (cx, cy, r, th, G) => () => { const t = R(), a = R() * Math.PI * 2;
+    if (t < .22) return [cx + r * Math.cos(a), cy + r * Math.sin(a), (R() * 2 - 1) * th];                       // rim
+    if (t < .34) { const rr = r * .84; return [cx + rr * Math.cos(a), cy + rr * Math.sin(a), (R() < .5 ? -1 : 1) * (th + .025)]; }   // inner ring
+    if (t < .46) { const rr = r * Math.sqrt(R()); return [cx + rr * Math.cos(a), cy + rr * Math.sin(a), (R() < .5 ? -1 : 1) * th]; } // faces
+    const p = G[Math.floor(R() * G.length)], s = r * .6, z = (R() < .72 ? 1 : -1) * (th + .04);                  // the symbol
+    return [cx + (p[0] + (R() - .5) * .02) * s, cy + (p[1] + (R() - .5) * .02) * s, z]; };
+
   // ---------- the shapes (all inside radius 1) ----------
   const SH = {
     dust: () => sphere([0, 0, 0], .35 + R() * .6),
@@ -58,6 +80,9 @@ if (hosts.length) {
     // two stacks of coins side by side, and the same coins as one stack
     twostacks: mix(...[-.48, .48].map(x => [1, () => disc([x, -.55 + Math.floor(R() * 5) * .26, 0], .32, .05)])),
     onestack: () => disc([0, -.7 + Math.floor(R() * 7) * .23, 0], .42, .05),
+    // two big coins apart — euros and bitcoin, each on its own — and one Kai coin, both in one place, with a ring of dust
+    twocoins: mix([1, faceCoin(-.5, .02, .46, .07, EURO)], [1, faceCoin(.5, -.02, .46, .07, BTC)]),
+    kaicoin: mix([5, faceCoin(0, 0, .76, .09, KAI)], [1, () => { const a = R() * Math.PI * 2, rr = .88 + (R() - .5) * .05; return [rr * Math.cos(a), rr * Math.sin(a), (R() - .5) * .08]; }]),
     // Swiss cross: two crossing bars
     cross: mix([1, () => box([0, 0, 0], [.72, .22, .16])], [1, () => box([0, 0, 0], [.22, .72, .16])]),
     // one node, then the same node linked to a second one
@@ -150,7 +175,8 @@ if (hosts.length) {
     const blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
     const mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false, blending });
     const grp = new THREE.Group(); grp.add(new THREE.Points(g, mat)); grp.rotation.x = .3;
-    const holder = new THREE.Group(); holder.add(grp); scene.add(holder);                  // holder: where the shape sits; grp: how it turns
+    const holder = new THREE.Group(); holder.add(grp); scene.add(holder);
+    const SC = +(host.getAttribute('data-scale') || 1); holder.scale.setScalar(SC);                    // some shapes are drawn larger                  // holder: where the shape sits; grp: how it turns
     // field
     const fg = new THREE.BufferGeometry();
     fg.setAttribute('position', new THREE.BufferAttribute(fBase, 3));
@@ -158,7 +184,7 @@ if (hosts.length) {
     const FU = { uTime: U.uTime, uPx: { value: 1 }, uExt: { value: new THREE.Vector3(3, 1.5, 1.4) }, uC1: { value: C1 }, uC2: { value: C2 }, uAlpha: { value: dark ? .8 : .55 } };
     const fmat = new THREE.ShaderMaterial({ uniforms: FU, vertexShader: FVS, fragmentShader: FS, transparent: true, depthWrite: false, blending });
     const field = new THREE.Group(); field.add(new THREE.Points(fg, fmat)); scene.add(field);
-    const flat = ['cross', 'check', 'shield', 'arrow', 'envelope', 'nodes3', 'padlock', 'keyparts'].includes(to);   // signs that read best facing you
+    const flat = ['cross', 'check', 'shield', 'arrow', 'envelope', 'nodes3', 'padlock', 'keyparts', 'kaicoin'].includes(to);   // signs that read best facing you
     const it = { host, zone, renderer, scene, camera, grp, holder, field, U, FU, t: 0, on: false, w: 0, h: 0, flat, mx: 0, my: 0, sx: 0, sy: 0 };
     const size = () => { const r = renderer.domElement.getBoundingClientRect(); const w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === it.w && h === it.h) return; it.w = w; it.h = h; renderer.setSize(w, h, false); camera.aspect = w / h;
@@ -166,7 +192,7 @@ if (hosts.length) {
       camera.position.set(0, 0, D); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
       const halfH = D * TAN, halfW = halfH * camera.aspect;
       // wide banner: the shape sits in the right part, beside the text; narrow: centred
-      holder.position.x = w / h > 1.4 ? -Math.min(halfW - 1.25, halfW * .5) : 0;   // the shape sits on the left, the text on the right
+      holder.position.x = w / h > 1.4 ? -Math.min(halfW - 1.25 * SC, halfW * .5) : 0;   // the shape sits on the left, the text on the right
       FU.uExt.value.set(halfW * 1.12, halfH * 1.12, 1.4);
       const px = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.35) * Math.min(1.25, Math.max(.75, Math.min(w, h) / 420));
       U.uPx.value = px; FU.uPx.value = px; };
