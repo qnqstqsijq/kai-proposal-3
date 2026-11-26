@@ -416,7 +416,9 @@ def s_hero_pin(s, level):
     rows = "".join(f'<li class="ui__row" data-u style="--d:{.1 + i * .1:g}"><span class="ui__ava"><img src="{TEAM_PHOTOS.get(sl, "")}" alt="" data-photo></span>'
                    f'<div><b>{esc(PEOPLE_BY[sl]["name"])}</b><small>{esc(PEOPLE_BY[sl]["title"])}</small></div></li>'
                    for i, sl in enumerate(s.get("people", [])[:4]))
-    if isinstance(s.get("visual"), dict):
+    if s.get("no_ui"):
+        ui = ""                                           # the scene alone, no panel
+    elif isinstance(s.get("visual"), dict):
         # the page's own UI screen, without its photo frame
         st = vis_ui({k: v for k, v in s["visual"].items() if k not in ("float", "center")}, level)
         ui = st[st.index('<div class="ui'):st.rindex('</div>')].replace('<div class="ui', '<div class="ui phero__ui', 1)

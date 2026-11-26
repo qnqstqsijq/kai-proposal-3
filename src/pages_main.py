@@ -120,7 +120,7 @@ PAGES["H-04"] = dict(level=3,
     sections=[
         # pinned header like Business overview: the image fills the screen, then draws back into the frame on the right,
         # where the panel comes in, centred (still for now, video later)
-        dict(t="hero", variant="pin", ui_center=True, image="/assets/media/whykai-hero.jpg", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
+        dict(t="hero", variant="pin", no_ui=True, image="/assets/media/whykai-hero.jpg", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
              sub="We're building one place for your money, and the infrastructure through which AI agents act on your behalf. Humans retain control. Agents execute.",
              buttons=[WAIT],
              visual=dict(photo="/assets/media/04-ai-m.jpg", eager=True, title="One balance", chip="Waiting for you",
