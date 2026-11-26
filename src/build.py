@@ -701,7 +701,7 @@ def s_flow(s, level):
         if sc.get("btn"):
             body += f'<div class="ui__btn flow__btn"><span>{esc(sc["btn"])}</span><span class="flow__done">{esc(sc.get("done", "Done"))}</span></div>'
         out.append(f'<div class="flow__scr" data-s="{i + 1}"><div class="ui__top"><span>{esc(sc["title"])}</span><span class="ui__chip">{esc(sc["chip"])}</span></div>{body}</div>')
-    ui = f'<div class="ui ui--center flow__ui">{"".join(out)}</div>'
+    ui = f'<div class="ui flow__ui">{"".join(out)}</div>'          # bottom-right corner, like the other frames
     if s.get("clip"):    # the frame's own video, with the cube footage and shade like every other frame
         stage = (f'<div class="stage"><video class="stage__img" data-par src="{s["clip"]}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
                  f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>{ui}</div>')
