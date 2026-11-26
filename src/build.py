@@ -570,7 +570,7 @@ def s_cards(s, level):
     scenes = [(list(it) + [None] * 5)[4] or scenes[i] for i, it in enumerate(items)]   # a card can name its own scene
     for i, it in enumerate(items):
         ic, t, d, u = (list(it) + [None] * 4)[:4]
-        FIGMA_ICONS = ("kyb", "iban", "stocks", "key", "tag", "chats")   # Figma pictograms named on purpose win over the homepage icon
+        FIGMA_ICONS = ("kyb", "iban", "stocks", "key", "tag", "chats", "pricing", "movemoney", "payments")   # Figma pictograms named on purpose win over the homepage icon
         ico = (icon(ic, "card__ico") if ic in FIGMA_ICONS else (home_icon(t, "card__ico", s.get("dark")) or icon(ic, "card__ico"))) if ic else ""
         text = f"{ico}<h3>{esc(t)}</h3>" + (f"<p>{esc(d)}</p>" if d else "")
         sc = f' data-scene="{scenes[i]}"'
@@ -607,7 +607,7 @@ STMT_SHAPES = {
     "You approve every payment.": "dust>check",
     "Private by design": "dust>padlock",
     "Custody and security": "keyparts>shield",
-    "The fee is part of the move.": "coin>arrow",
+    "The fee is part of the move.": "breakdown",          # its own scene: the cost breakdown, the fee cut from the move
     "Humans retain control. Agents execute.": "dust>ring",
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
@@ -766,6 +766,15 @@ def s_plans(s, level):
                      f'<span class="plan__k">{esc(pl.get("k", "Account plan"))}</span>'
                      f'<span class="plan__price">{esc(pl["price"])}<small>{esc(pl.get("unit", "per year"))}</small></span>'
                      f'<ul>{lis}</ul></div>')
+    if s.get("rates"):
+        # header for the Business plans band: title and what the plans are on the left; on the right, the usage fees
+        # that follow the Personal rates, one per line, with the link to Business pricing
+        rl = "".join(f'<li>{icon(ic, "planhead__ico")}<span>{esc(t)}</span></li>' for ic, t in s["rates"])
+        hd = (f'<div class="planhead"><div class="planhead__l"><h2 class="h2"{R(level)}>{esc(s["h2"])}</h2>'
+              f'<p class="lead"{R(level, .1)}>{esc(s["lead"])}</p></div>'
+              f'<div class="planhead__r"{R(level, .15)}><span class="planhead__k">{esc(s.get("rates_title", ""))}</span><ul class="planhead__rates">{rl}</ul>'
+              + (buttons(s["ctas"], level, .2, "btns") if s.get("ctas") else "") + '</div></div>')
+        return wrap_sec(s, hd + f'<div class="plans">{"".join(cards)}</div>')
     return wrap_sec(s, head(s, level) + f'<div class="plans">{"".join(cards)}</div>' + tail(s, level))
 
 def s_compare(s, level):
