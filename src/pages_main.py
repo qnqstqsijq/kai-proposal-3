@@ -84,9 +84,9 @@ PAGES["H-03"] = dict(level=3,
              # the fee (%), and settles level (assets/site/particles.js: "scale")
              shape="scale"),
         dict(t="cards", h2="Clear fees. In the open.", items=[
-            ("pricing", "Shown first", "You see the rate and fees before you confirm."),
-            ("movemoney", "On every move", "Payments, conversions, card spend and trades show their cost in the flow."),
-            ("payments", "What you approve is what you pay", "Kai platform is designed so the fee you see before you confirm is the fee you pay."),
+            ("shownfirst", "Shown first", "You see the rate and fees before you confirm."),
+            ("everymove", "On every move", "Payments, conversions, card spend and trades show their cost in the flow."),
+            ("approvepay", "What you approve is what you pay", "Kai platform is designed so the fee you see before you confirm is the fee you pay."),
         ], line="Silver, Gold and Platinum, for Personal and for Business."),
         dict(t="plans", h2="Personal plans, with every fee in view",
              lead="Plans for people who want one account for fiat, crypto, stablecoins and US-listed stocks.",
