@@ -607,7 +607,7 @@ STMT_SHAPES = {
     "You approve every payment.": "dust>check",
     "Private by design": "dust>padlock",
     "Custody and security": "keyparts>shield",
-    "The fee is part of the move.": "breakdown",          # its own scene: the cost breakdown, the fee cut from the move
+    "The fee is part of the move.": "feering",            # its own scene: the move as a ring, the fee a slice of it
     "Humans retain control. Agents execute.": "dust>ring",
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
@@ -766,14 +766,13 @@ def s_plans(s, level):
                      f'<span class="plan__k">{esc(pl.get("k", "Account plan"))}</span>'
                      f'<span class="plan__price">{esc(pl["price"])}<small>{esc(pl.get("unit", "per year"))}</small></span>'
                      f'<ul>{lis}</ul></div>')
-    if s.get("rates"):
-        # header for the Business plans band: title and what the plans are on the left; on the right, the usage fees
-        # that follow the Personal rates, one per line, with the link to Business pricing
-        rl = "".join(f'<li>{icon(ic, "planhead__ico")}<span>{esc(t)}</span></li>' for ic, t in s["rates"])
-        hd = (f'<div class="planhead"><div class="planhead__l"><h2 class="h2"{R(level)}>{esc(s["h2"])}</h2>'
-              f'<p class="lead"{R(level, .1)}>{esc(s["lead"])}</p></div>'
-              f'<div class="planhead__r"{R(level, .15)}><span class="planhead__k">{esc(s.get("rates_title", ""))}</span><ul class="planhead__rates">{rl}</ul>'
-              + (buttons(s["ctas"], level, .2, "btns") if s.get("ctas") else "") + '</div></div>')
+    if s.get("head_top"):
+        # title on the left; on the right, starting on the same line: the text, the note and the button
+        side = (f'<p class="lead"{R(level, .1)}>{esc(s["lead"])}</p>' if s.get("lead") else "") + \
+               (f'<p class="planhead__note"{R(level, .15)}>{esc(s["line"])}</p>' if s.get("line") else "") + \
+               (buttons(s["ctas"], level, .2, "btns") if s.get("ctas") else "")
+        hd = (f'<div class="planhead"><div class="planhead__l"><h2 class="h2"{R(level)}>{esc(s["h2"])}</h2></div>'
+              f'<div class="planhead__r">{side}</div></div>')
         return wrap_sec(s, hd + f'<div class="plans">{"".join(cards)}</div>')
     return wrap_sec(s, head(s, level) + f'<div class="plans">{"".join(cards)}</div>' + tail(s, level))
 

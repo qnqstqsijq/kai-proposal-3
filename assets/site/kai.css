@@ -1437,16 +1437,16 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 .pglobe--hero{position:relative!important;inset:auto!important;transform:none!important;width:calc(100% + var(--gutter))!important;height:clamp(calc(var(--u)*460),48vw,calc(var(--u)*900))!important;margin-block:calc(var(--u)*-40);pointer-events:none}
 .pglobe--hero canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
 
-/* Business plans band (Pricing): title and plan prices left; the usage fees that follow Personal listed right */
-.planhead{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gp);row-gap:calc(var(--u)*32);align-items:end;margin-bottom:clamp(calc(var(--u)*40),4vw,calc(var(--u)*72))}
-.planhead__l{grid-column:1/span 6;display:flex;flex-direction:column;gap:var(--sp-m)}
-.planhead__l .lead{color:rgba(244,242,240,.8);max-width:var(--span-body)}
-.planhead__r{grid-column:8/span 5;display:flex;flex-direction:column;gap:calc(var(--u)*18);align-items:flex-start;padding:clamp(calc(var(--u)*18),1.6vw,calc(var(--u)*28));border-radius:var(--r-m);background:rgba(244,242,240,.06);border:1px solid rgba(244,242,240,.14);-webkit-backdrop-filter:blur(calc(var(--u)*18));backdrop-filter:blur(calc(var(--u)*18))}
-.planhead__k{font-size:var(--t-small);color:rgba(244,242,240,.72);line-height:1.4}
-.planhead__rates{list-style:none;margin:0;padding:0;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*10) calc(var(--u)*18)}
-.planhead__rates li{display:flex;align-items:center;gap:calc(var(--u)*10);color:var(--paper);font-size:var(--t-body);line-height:1.3}
-.planhead__ico{width:calc(var(--u)*26);height:calc(var(--u)*26);flex:none;color:#c0d4d7}
-@media (max-width:900px){.planhead__l,.planhead__r{grid-column:1/-1}.planhead__rates{grid-template-columns:1fr}}
-/* "The fee is part of the move.": the breakdown scene takes the open left half, clear of the text on the right */
-.stmt .pglobe[data-shape="breakdown"]{left:0!important;right:auto!important;width:50%!important}
-@media (max-width:900px){.stmt .pglobe[data-shape="breakdown"]{width:auto!important}}
+/* Business plans band (Pricing): the title and the text start together at the top: title left (6 columns), text,
+   note and button right (5 columns), then the plan cards */
+.planhead{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gp);row-gap:calc(var(--u)*24);align-items:start;margin-bottom:clamp(calc(var(--u)*40),4vw,calc(var(--u)*72))}
+.planhead__l{grid-column:1/span 6}
+.planhead__l .h2{max-width:var(--span-text)}
+.planhead__r{grid-column:8/span 5;display:flex;flex-direction:column;align-items:flex-start;gap:calc(var(--u)*16);padding-top:calc(var(--u)*6)}
+.planhead__r .lead{color:rgba(244,242,240,.86);max-width:var(--span-body);margin:0}
+.planhead__note{margin:0;font-size:var(--t-small);line-height:1.5;color:rgba(244,242,240,.6);max-width:var(--span-body);padding-top:calc(var(--u)*14);border-top:1px solid rgba(244,242,240,.16)}
+.planhead__r .btns{margin-top:calc(var(--u)*8)}
+@media (max-width:900px){.planhead__l,.planhead__r{grid-column:1/-1}}
+/* "The fee is part of the move.": the ring scene takes the open left half, clear of the text on the right */
+.stmt .pglobe[data-shape="feering"]{left:0!important;right:auto!important;width:50%!important}
+@media (max-width:900px){.stmt .pglobe[data-shape="feering"]{width:auto!important}}

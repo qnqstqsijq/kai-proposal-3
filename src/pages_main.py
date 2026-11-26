@@ -92,13 +92,12 @@ PAGES["H-03"] = dict(level=3,
              lead="Plans for people who want one account for fiat, crypto, stablecoins and US-listed stocks.",
              plans=plans(["€0.00", "€47.88", "€95.88"], ["€59.88", "€47.88", "€11.88"])),
         dict(t="table", rows=FEES, line="Agent features are being built and are not part of the start. You can always use Kai platform yourself."),
-        # own header: title and plan prices on the left, the usage fees that follow Personal on the right (no repeated line)
+        # own header layout (head_top): title and text start on the same line at the top, the text and button in the right column
         dict(t="plans", h2="Business plans, built for how companies move money",
-             lead="Kai Business has its own account plan prices, per year.",
+             lead="Kai Business has its own account plan prices. Usage fees for transfers, cards, exchange, crypto and US stock trades follow the same Silver, Gold and Platinum rates as Personal.",
              plans=plans(["€95.88", "€179.88", "€359.88"], ["€179.88", "€119.88", "€0"]),
-             rates_title="Usage fees, at the same Silver, Gold and Platinum rates as Personal",
-             rates=[("movemoney", "Transfers"), ("card", "Cards"), ("exchange", "Currency exchange"), ("coins", "Crypto conversion and trading"), ("stocks", "US stock trades")],
-             dark=True, vid=True, ctas=[("Business pricing", "/business/pricing/")]),
+             line="Transfers, cards, currency exchange, crypto conversion and trading, and US stock trades use the same plan rates as Personal.",
+             head_top=True, dark=True, vid=True, ctas=[("Business pricing", "/business/pricing/")]),
         dict(t="text", dark=True, h2="The fee is part of the move.",
              body="Before you confirm, Kai platform is designed to show what you send, the rate, the fees and what you get. If an agent prepares a move, you still see the same breakdown before you approve. Agent features are being built and are not part of the start."),
         dict(t="faq", h2="Questions about pricing", items=[

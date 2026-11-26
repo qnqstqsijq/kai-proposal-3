@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'breakdown'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -842,42 +842,40 @@ if (hosts.length) {
 }
 
 
-/* "The fee is part of the move." (Pricing): the breakdown you see before you confirm, drawn in light, line by line as
-   the section comes up. Four rows, each with its sign on the left: € what you send (a long bar), × the rate (a dotted
-   line), % the fee, and £ what you get. The fee is not added from outside: the end of the send bar breaks off and drops
-   into the fee row, and the rest flows down into the get row. Light runs along the bars while it rests; the cursor
-   tilts it a little. */
+/* "The fee is part of the move." (Pricing): the move as a ring of light, turning slowly in space, with the money flowing
+   round it. One slice of the ring is the fee. As the section comes up, the ring gathers from dust, then the fee slice
+   lifts out of it, glows, and floats a little apart, still in its place in the circle, with a small % beside it: part
+   of the same move, in plain view. In the middle, the € you send turns into the £ you get. The cursor tilts the ring. */
 {
-  const host = document.querySelector('.pglobe[data-shape="breakdown"]');
+  const host = document.querySelector('.pglobe[data-shape="feering"]');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
     const R = Math.random, TAU = Math.PI * 2;
     const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const glyph = (ch, k = .8, w = 600) => { const S = 160, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+    const glyph = (ch, k = .8, w = 600) => { const S = 180, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
       g.fillStyle = '#fff'; g.font = `${w} ${S * k}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, S / 2, S * .54);
       const d = g.getImageData(0, 0, S, S).data, pts = []; for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
       return pts; };
-    const SIG = [glyph('€'), glyph('×', .7), glyph('%', .62, 700), glyph('£')];
+    const EUR = glyph('€'), GBP = glyph('£'), PCT = glyph('%', .62, 700);
     const k = mob ? .5 : 1;
-    const ROW = [1.35, .45, -.45, -1.35], X0 = -1.6, LEN = 4.2, FEE = .6, BH = .2;   // rows, bar start, send length, fee length, bar height
-    const parts = []; const add = (kd, row, x, y, z, w = 0) => parts.push([kd, row, x, y, z, w]);
-    // 0 signs
-    for (let r2 = 0; r2 < 4; r2++) for (let i = 0; i < 700 * k; i++) { const p = SIG[r2][Math.floor(R() * SIG[r2].length)]; add(0, r2, X0 - .65 + p[0] * .3, ROW[r2] + p[1] * .3, 0); }
-    // 1 the send bar (row 0): u along 0..1 over LEN; the last FEE of it is the fee piece
-    const bar = (kd, row, len, n) => { for (let i = 0; i < n; i++) { const t = R(), u = R();
-      const y = t < .35 ? (R() < .5 ? -1 : 1) * BH / 2 : (R() - .5) * BH, z = (R() - .5) * .08;   // edges a little denser
-      add(kd, row, u * len, y, z, u); } };
-    bar(1, 0, LEN, Math.round(5200 * k));
-    // 2 the rate: a dotted line over the full length
-    for (let i = 0; i < 1400 * k; i++) { const d = Math.floor(R() * 34), u = (d + R() * .45) / 34; add(2, 1, u * LEN, (R() - .5) * .05, 0, u); }
-    // 3 the get bar (row 3): LEN - FEE long
-    bar(3, 3, LEN - FEE, Math.round(4600 * k));
-    // 4 a stream that carries the move down from the send bar to the get bar
-    for (let i = 0; i < 900 * k; i++) add(4, 0, R(), 0, 0, R());
-    // 5 drifting specks
-    for (let i = 0; i < 1100 * k; i++) add(5, 0, (R() * 2 - 1) * 4.4, (R() * 2 - 1) * 2.4, (R() * 2 - 1) * 1);
-    const N = parts.length, seed = new Float32Array(N); for (let i = 0; i < N; i++) seed[i] = R();
-    const dark = !!host.closest('.dkpanel,[data-tone="dark"],.sec--dark');
+    const RR = 1.55, TUBE = .2, FEE0 = .06, FEE1 = .16;                       // ring radius, thickness, the fee slice (fraction of the turn)
+    const NR = Math.round(12000 * k), NG = Math.round(1800 * k), NP = Math.round(600 * k), NF = Math.round(900 * k), ND = Math.round(1500 * k);
+    const N = NR + NG + NP + NF + ND;
+    const base = new Float32Array(N * 3), dust = new Float32Array(N * 3), kind = new Uint8Array(N), seed = new Float32Array(N), ga = new Float32Array(N * 2);
+    let n = 0;
+    const put = (kd, x, y, z) => { base[n * 3] = x; base[n * 3 + 1] = y; base[n * 3 + 2] = z; kind[n] = kd; seed[n] = R();
+      const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 2.5 + R() * 3; dust[n * 3] = rad * q * Math.cos(a) * 1.5; dust[n * 3 + 1] = rad * yy; dust[n * 3 + 2] = rad * q * Math.sin(a); n++; };
+    // 0 the ring: u = position round the turn (0..1), stored in base.x; the cross-section in y/z
+    for (let i = 0; i < NR; i++) { const u = R(), b = R() * TAU, rr = TUBE * (R() < .55 ? 1 : Math.sqrt(R())); put(0, u, rr * Math.cos(b), rr * Math.sin(b)); }
+    // 1 the glyph in the middle: € points with matching £ points
+    for (let i = 0; i < NG; i++) { const p = EUR[Math.floor(R() * EUR.length)], q = GBP[Math.floor(R() * GBP.length)]; put(1, p[0] * .62, p[1] * .62, 0); ga[n * 2 - 2] = q[0] * .62; ga[n * 2 - 1] = q[1] * .62; }
+    // 2 the % beside the fee slice
+    for (let i = 0; i < NP; i++) { const p = PCT[Math.floor(R() * PCT.length)]; put(2, p[0] * .28, p[1] * .28, 0); }
+    // 3 the flow: bright specks running round the ring
+    for (let i = 0; i < NF; i++) put(3, R(), (R() - .5) * TUBE, (R() - .5) * TUBE);
+    // 4 drifting specks
+    for (let i = 0; i < ND; i++) put(4, (R() * 2 - 1) * 4.2, (R() * 2 - 1) * 2.4, (R() * 2 - 1) * 1.4);
+    const dark = !!host.closest('.dkpanel,[data-tone="dark"]');
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
@@ -889,58 +887,53 @@ if (hosts.length) {
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: dark ? THREE.AdditiveBlending : THREE.NormalBlending,
       vertexShader: `attribute float aA, aS, aH, rnd; uniform float uPx, uDark; varying vec3 vCol; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.15 + rnd * 1.1) * (10. / -mv.z);
-          vec3 lo = uDark > .5 ? vec3(.2, .48, .52) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.92, 1., 1.) : vec3(.06, .3, .33);
+          gl_PointSize = uPx * aS * (1.05 + rnd * 1.1) * (10. / -mv.z);
+          vec3 lo = uDark > .5 ? vec3(.16, .42, .46) : vec3(.04, .17, .19), mid = uDark > .5 ? vec3(.5, .86, .9) : vec3(.3, .5, .52), top = uDark > .5 ? vec3(.95, 1., 1.) : vec3(.05, .32, .35);
           vCol = mix(mix(lo, mid, fract(rnd * 3.7)), top, aH); vA = aA; }`,
       fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
         gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.07, .25, d))); }` });
     const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
-    const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
+    const ring = new THREE.Group(); ring.add(pts); scene.add(ring);
     let W = 0, H = 0;
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
-      camera.position.set(0, .2, 11); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
-      const halfH = 11 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
-      grp.scale.setScalar(Math.min(1.3, halfW * 2 * .92 / 6.2, halfH * 2 * .9 / 3.8)); grp.position.x = -.05;
-      U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
+      camera.position.set(0, 0, 10); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+      const halfH = 10 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
+      ring.scale.setScalar(Math.min(1.25, halfW * 2 * .8 / 5.2, halfH * 2 * .8 / 5.2));   // room for the fee and its % all the way round
+      U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.25); };
     size(); new ResizeObserver(size).observe(host);
     const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
     zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
     zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
-    // drawn as the section comes up the screen; complete when it is a little above the middle
-    const target = () => { const r = zone.getBoundingClientRect(), vh = innerHeight; return Math.min(1, Math.max(0, (vh * .95 - r.top) / (vh * .75))); };
+    const target = () => { const r = zone.getBoundingClientRect(), vh = innerHeight; return Math.min(1, Math.max(0, (vh * .95 - r.top) / (vh * .7))); };
     let t = 0, p = 0, on = false, running = false, last = performance.now();
     const frame = now => {
       const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
-      const tg = target(); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 2.8);
+      const tg = target(); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 2.6);
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
-      const eSend = sm(.02, .3, p), eRate = sm(.25, .45, p), eCut = sm(.45, .68, p), eGet = sm(.64, .95, p);
-      const sweep = (t * .35) % 1.6 - .3;                                    // a soft light runs along the bars
+      const form = sm(0, .45, p), lift = sm(.45, .8, p), swap = sm(.6, .95, p);
+      const spin = t * .12;                                                  // the ring turns slowly in its own plane
+      const feeMid = (FEE0 + FEE1) / 2 * TAU + spin, out = lift * .38;           // the fee slice lifts out, along its middle
       for (let i = 0; i < N; i++) {
-        const q = parts[i], kd = q[0], row = q[1], o = i * 3, r = seed[i]; let x = 0, y = 0, z = 0, a = .85, s = 1, h = 0;
-        if (kd === 0) { const show = [eSend, eRate, eCut, eGet][row]; x = q[2]; y = q[3]; z = q[4]; a = .9 * show; s = 1.05; h = .5; }
-        else if (kd === 1) {
-          const u = q[5], isFee = u * LEN > LEN - FEE;
-          const grow = sm(u - .15, u + .05, eSend * 1.15);                     // grows from left to right
-          x = X0 + q[2]; y = ROW[0] + q[3]; z = q[4];
-          if (isFee) {                                                         // the end breaks off and drops into the fee row
-            const f = eCut, lift = Math.sin(Math.PI * f) * .25;
-            x = X0 + (q[2] - (LEN - FEE)) * (1 - f) + (LEN - FEE) * (1 - f) + 0 * f;   // ends up at the start of the fee row
-            x = X0 + (LEN - FEE) * (1 - f) + (q[2] - (LEN - FEE));
-            y = ROW[0] + (ROW[2] - ROW[0]) * f + q[3] + lift; h = .35 + .4 * f; }
-          a = .85 * grow; if (!isFee) { const d = Math.abs(u - sweep); h = Math.max(0, 1 - d * 7) * .6; } }
-        else if (kd === 2) { const u = q[5]; x = X0 + q[2]; y = ROW[1] + q[3]; z = 0; a = .7 * sm(u - .1, u + .02, eRate * 1.1); s = .9; }
-        else if (kd === 3) { const u = q[5]; x = X0 + q[2]; y = ROW[3] + q[3]; z = q[4]; a = .85 * sm(u - .12, u + .04, eGet * 1.14);
-          const d = Math.abs(u - (sweep - .15)); h = Math.max(0, 1 - d * 7) * .6; }
-        else if (kd === 4) {                                                   // the move flowing down while the get bar draws
-          const u = (q[5] + t * .5) % 1, xx = X0 + q[2] * (LEN - FEE);
-          x = xx + Math.sin(r * 40) * .04; y = ROW[0] - BH / 2 + (ROW[3] - ROW[0] + BH) * u; z = 0;
-          a = Math.sin(Math.PI * u) * .35 * Math.sin(Math.PI * eGet); s = .7; }
-        else { x = q[2] + Math.sin(t * .3 + r * 50) * .1; y = q[3] + Math.cos(t * .27 + r * 40) * .1; z = q[4]; a = .08 + .18 * r; s = .7; }
+        const o = i * 3, kd = kind[i], r = seed[i]; let x, y, z, a = .8, s = 1, h = 0;
+        if (kd === 0 || kd === 3) {
+          let u = base[o]; if (kd === 3) u = (u + t * .06 + r * .03) % 1;    // the flow runs round the ring
+          const isFee = u > FEE0 && u < FEE1, ang = u * TAU + spin;
+          const cy = base[o + 1], cz = base[o + 2], rad = RR + cy;
+          x = Math.cos(ang) * rad; y = Math.sin(ang) * rad; z = cz;
+          if (isFee) { x += Math.cos(feeMid) * out; y += Math.sin(feeMid) * out; z += lift * .15; h = .35 + .55 * lift; a = .85 + .15 * lift; s = 1 + .2 * lift; }
+          if (kd === 3) { a = isFee ? .95 : .7; h = Math.max(h, .5); s = .9; }
+          else if (!isFee) a = .62; }
+        else if (kd === 1) { const ax = base[o], ay = base[o + 1], bx = ga[i * 2], by = ga[i * 2 + 1];
+          const tw = Math.sin(Math.PI * swap) * .25 * (r - .5);
+          x = ax + (bx - ax) * swap + tw; y = ay + (by - ay) * swap + tw * .6; z = 0; a = .9; h = .45; }
+        else if (kd === 2) { const d = RR + .38 + out + .28; x = Math.cos(feeMid) * d + base[o]; y = Math.sin(feeMid) * d + base[o + 1]; z = .1; a = .95 * lift; h = .7; s = 1.05; }
+        else { x = base[o] + Math.sin(t * .3 + r * 50) * .1; y = base[o + 1] + Math.cos(t * .27 + r * 40) * .1; z = base[o + 2]; a = .08 + .18 * r; s = .7; }
+        if (kd !== 4 && form < 1) { x = dust[o] + (x - dust[o]) * form; y = dust[o + 1] + (y - dust[o + 1]) * form; z = dust[o + 2] + (z - dust[o + 2]) * form; a *= .35 + .65 * form; }
         pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s; hi[i] = h;
       }
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aH.needsUpdate = true;
-      grp.rotation.y = -.12 + sx * .25 + Math.sin(t * .2) * .04; grp.rotation.x = sy * .1;
+      ring.rotation.x = -.35 + sy * .2 + Math.sin(t * .25) * .06; ring.rotation.y = .3 + sx * .35;
       renderer.render(scene, camera);
       if (on && !reduce) requestAnimationFrame(frame); else running = false;
     };
