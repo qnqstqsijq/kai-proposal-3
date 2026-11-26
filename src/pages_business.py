@@ -64,7 +64,7 @@ PAGES["B-03"] = dict(level=3,
              ]),
         dict(BIZ_PRICING_BAND, dust=False),                     # no dust over this banner
         # scroll-driven, like the homepage Kai AI section: each step plays its action in the account widget
-        dict(t="flow", h2="Receive, hold and move, in one place.", steps=[
+        dict(t="flow", clip="/assets/media/biz-accounts.mp4", h2="Receive, hold and move, in one place.", steps=[
             ("Receive", "Get paid to your IBAN, or receive crypto and stablecoins."),
             ("Hold", "See fiat, crypto, stablecoins and stocks in one view."),
             ("Move", "Convert or send, with the rate and fees shown first."),

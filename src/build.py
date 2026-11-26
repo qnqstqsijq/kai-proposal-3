@@ -702,7 +702,11 @@ def s_flow(s, level):
             body += f'<div class="ui__btn flow__btn"><span>{esc(sc["btn"])}</span><span class="flow__done">{esc(sc.get("done", "Done"))}</span></div>'
         out.append(f'<div class="flow__scr" data-s="{i + 1}"><div class="ui__top"><span>{esc(sc["title"])}</span><span class="ui__chip">{esc(sc["chip"])}</span></div>{body}</div>')
     ui = f'<div class="ui ui--center flow__ui">{"".join(out)}</div>'
-    stage = f'<div class="stage flow__stage">{ui}</div>'
+    if s.get("clip"):    # the frame's own video, with the cube footage and shade like every other frame
+        stage = (f'<div class="stage"><video class="stage__img" data-par src="{s["clip"]}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
+                 f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="stage__shade"></div>{ui}</div>')
+    else:                # plain dark teal box until a video is chosen
+        stage = f'<div class="stage flow__stage">{ui}</div>'
     lis = "".join(f'<li class="kstory__step" data-i="{i + 1}"><h3>{esc(t)}</h3><p>{esc(d)}</p></li>' for i, (t, d) in enumerate(steps))
     return (f'<section class="kstory kstory--flow" data-story data-k="1" style="--n:{n}"><div class="kstory__pin"><div class="wrap kstory__grid">'
             f'<div class="kstory__vis">{stage}</div>'
