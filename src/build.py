@@ -444,6 +444,8 @@ def s_hero(s, level):
         return s_hero_pin(s, level)
     cls = {"main": "hero", "sub": "hero hero--sub", "text": "hero hero--text"}[variant]
     vis = visual(s.get("visual"), level)
+    if s.get("shape"):              # a particle scene in place of the frame (assets/site/particles.js)
+        vis = f'<div class="pglobe pglobe--hero" data-shape="{esc(s["shape"])}" aria-hidden="true"></div>'
     eyebrow = ""  # no small titles above headings
     sub = f'<p class="hero__sub"{R(level, .2)}>{esc(s["sub"])}</p>' if s.get("sub") else ""
     bts = buttons(s.get("buttons", []), level, .3)

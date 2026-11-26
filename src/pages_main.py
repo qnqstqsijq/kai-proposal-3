@@ -80,9 +80,9 @@ PAGES["H-03"] = dict(level=3,
         dict(t="hero", variant="sub", eyebrow="Pricing", h1="See the cost before you move.",
              sub="Kai platform is designed to show the rate and fees on every payment, conversion and trade. Before you confirm.",
              buttons=[WAIT],
-             visual=dict(title="Convert", chip="Rate shown first",
-                         rows=[("€", "You send", "Euro account", "€1,000.00"), ("£", "You get", "Pound account", "£857.39")],
-                         kv=[("Rate", "€1 = £0.8617"), ("Fee", "€5.00 (0.50%)")], btn="Confirm")),
+             # particles in place of the frame: a € coin goes through a glass prism and comes out split in the open,
+             # what arrives (£) and the fee (%) (assets/site/particles.js: "prism")
+             shape="prism"),
         dict(t="cards", h2="Clear fees. In the open.", items=[
             ("check", "Shown first", "You see the rate and fees before you confirm."),
             ("move", "On every move", "Payments, conversions, card spend and trades show their cost in the flow."),

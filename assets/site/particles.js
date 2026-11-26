@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => h.getAttribute('data-shape') !== 'stacks');   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -696,5 +696,124 @@ if (hosts.length) {
       g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aT.needsUpdate = true;
       FU.uTime.value = t; renderer.render(scene, camera);
     }
+  }
+}
+
+
+/* Pricing header, "See the cost before you move": a coin carrying the € goes into a glass prism and comes out the other
+   side split in the open, a large coin with what arrives (£) and a small one with the fee (%), on two rays, like light
+   split into its colours. It plays as you scroll the header off (and gently on its own), a thin beam of specks always
+   runs through the prism, the coins turn softly, and the cursor tilts the scene. Teal specks on the light page. */
+{
+  const host = document.querySelector('.pglobe[data-shape="prism"]');
+  if (host) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
+    const R = Math.random, TAU = Math.PI * 2;
+    const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const glyph = (ch, k = .8, w = 600) => { const S = 180, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.font = `${w} ${S * k}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, S / 2, S * .54);
+      const d = g.getImageData(0, 0, S, S).data, pts = []; for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) pts.push([x / S * 2 - 1, 1 - y / S * 2]);
+      return pts; };
+    const EUR = glyph('€'), GBP = glyph('£'), PCT = glyph('%', .62, 700);
+    const coin = (G, r, th) => { const t = R(), a = R() * TAU;                                   // a standing coin, facing the viewer
+      if (t < .3) return [r * Math.cos(a), r * Math.sin(a), (R() * 2 - 1) * th];
+      if (t < .42) { const q = r * .84; return [q * Math.cos(a), q * Math.sin(a), th * 1.1]; }
+      if (t < .55) { const q = r * Math.sqrt(R()); return [q * Math.cos(a), q * Math.sin(a), (R() < .5 ? -1 : 1) * th]; }
+      const p = G[Math.floor(R() * G.length)]; return [p[0] * r * .62, p[1] * r * .62, th * 1.25]; };
+    // the prism: a triangular glass bar, edges dense, faces faint
+    // the classic prism: a triangle facing the viewer (point up), with a little depth
+    const PD = .8, PR = 1.15, tri = [0, 1, 2].map(i => [Math.cos(i * TAU / 3 + Math.PI / 2) * PR, Math.sin(i * TAU / 3 + Math.PI / 2) * PR - .2]);
+    const PH = 2 * PR;
+    const prismPt = () => { const t = R();
+      const i = Math.floor(R() * 3), a = tri[i], b = tri[(i + 1) % 3], f = R();
+      if (t < .62) { if (R() < .82) { const z = (R() < .5 ? -.5 : .5) * PD; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z]; }   // the two triangles (front, back)
+        return [a[0], a[1], (R() - .5) * PD]; }                                                                     // the depth edges
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, (R() - .5) * PD]; };                              // side faces, faint
+    const k = mob ? .5 : 1;
+    const NIN = Math.round(3400 * k), NPR = Math.round(3600 * k), NRAY = Math.round(1500 * k), NAMB = Math.round(1600 * k);
+    const NBIG = Math.round(NIN * .78);                                      // most of the coin arrives; the rest is the fee
+    const N = NIN + NPR + NRAY + NAMB;
+    const A = new Float32Array(N * 3), B = new Float32Array(N * 3), kind = new Uint8Array(N), seed = new Float32Array(N);
+    const IN = [-3.05, .05, 0], BIG = [3.0, .5, 0], FEE = [2.5, -1.15, .2];
+    let n = 0;
+    for (let i = 0; i < NIN; i++, n++) { const a = coin(EUR, .9, .075); A.set(a, n * 3);
+      const b = i < NBIG ? coin(GBP, .82, .07) : coin(PCT, .36, .045); B.set(b, n * 3); kind[n] = i < NBIG ? 0 : 1; seed[n] = R(); }
+    for (let i = 0; i < NPR; i++, n++) { A.set(prismPt(), n * 3); kind[n] = 2; seed[n] = R(); }
+    for (let i = 0; i < NRAY; i++, n++) { kind[n] = 3; seed[n] = R(); }
+    for (let i = 0; i < NAMB; i++, n++) { A.set([(R() * 2 - 1) * 4.6, (R() * 2 - 1) * 2.3, (R() * 2 - 1) * 1.4], n * 3); kind[n] = 4; seed[n] = R(); }
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
+    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
+    g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
+    const U = { uPx: { value: 1 } };
+    const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.NormalBlending,
+      vertexShader: `attribute float aA, aS, rnd; uniform float uPx; varying vec3 vCol; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+          gl_PointSize = uPx * aS * (1.25 + rnd * 1.1) * (9. / -mv.z); vA = aA; vCol = mix(vec3(.04, .17, .19), vec3(.3, .5, .52), fract(rnd * 3.7)); }`,
+      fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
+        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
+    const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
+    const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
+    let W = 0, H = 0;
+    const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
+      if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
+      camera.position.set(0, .4, 10); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+      const halfH = 10 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
+      grp.scale.setScalar(Math.min(1.3, halfW * 2 * .96 / 7.6, halfH * 2 * .92 / 3.4));
+      U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
+    size(); new ResizeObserver(size).observe(host);
+    const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
+    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
+    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
+    // the split plays by itself once (and repeats slowly), and scrolling the header away moves it along too
+    const target = () => { const r = zone.getBoundingClientRect(); return Math.min(1, Math.max(0, -r.top / (innerHeight * .5))); };
+    let t = 0, p = 0, on = false, running = false, last = performance.now(), born = null;
+    const lerp = (a, b, f) => a + (b - a) * f;
+    const frame = now => {
+      const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      if (born === null) born = now;
+      // own clock: rests whole, splits, holds, comes back together, every 9 s; scrolling pushes it to "split"
+      const cyc = reduce ? .55 : ((now - born) / 1000 % 9) / 9;
+      const own = cyc < .12 ? 0 : cyc < .45 ? sm(.12, .45, cyc) : cyc < .85 ? 1 : 1 - sm(.85, 1, cyc);
+      const tg = Math.max(own, target()); p += reduce ? tg - p : (tg - p) * Math.min(1, dt * 2.6);
+      sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
+      const swIn = Math.sin(t * .6) * .35, swOut = Math.sin(t * .5 + 1) * .3;
+      for (let i = 0; i < N; i++) {
+        const o = i * 3, kd = kind[i], r = seed[i]; let x, y, z, a = .9, s = 1;
+        if (kd <= 1) {                                                         // the coin: in → through the prism → out, split
+          const e = sm(r * .35, .65 + r * .35, p);                              // each speck goes at its own moment
+          const ca = Math.cos(swIn), sa = Math.sin(swIn), co = Math.cos(swOut), so = Math.sin(swOut);
+          const ax = IN[0] + A[o] * ca + A[o + 2] * sa, ay = IN[1] + A[o + 1], az = IN[2] - A[o] * sa + A[o + 2] * ca;
+          const T = kd === 0 ? BIG : FEE, bx = T[0] + B[o] * co + B[o + 2] * so, by = T[1] + B[o + 1], bz = T[2] - B[o] * so + B[o + 2] * co;
+          // through the prism: a curve with the prism's centre as its middle point, spread inside the glass
+          const mxp = (r - .5) * .7, myp = -.2 + (Math.sin(r * 91) * .5) * .9;
+          if (e < .5) { const f = e * 2; x = lerp(ax, mxp, f * f); y = lerp(ay, myp, f); z = lerp(az, 0, f); }
+          else { const f = (e - .5) * 2; x = lerp(mxp, bx, 1 - (1 - f) * (1 - f)); y = lerp(myp, by, f); z = lerp(0, bz, f); }
+          a = .9 - Math.sin(Math.PI * e) * .35; s = kd === 1 ? .9 : 1; }
+        else if (kd === 2) {                                                   // the prism, turning a little
+          const tr = -.35 + Math.sin(t * .3) * .12, c = Math.cos(tr), sn = Math.sin(tr);
+          x = A[o] * c + A[o + 2] * sn; y = A[o + 1]; z = -A[o] * sn + A[o + 2] * c;
+          const edge = Math.abs(Math.abs(A[o + 2]) - PD / 2) < .001 || Math.abs(Math.hypot(A[o], A[o + 1] + .2) - PR) < .01;
+          a = (edge ? .55 : .14) + Math.sin(Math.PI * p) * .25; s = edge ? .9 : .75; }
+        else if (kd === 3) {                                                   // the beam: in, then out on two rays
+          const u = (r * 7 + t * .22) % 1, toFee = r < .38;
+          if (u < .45) { const f = u / .45; x = lerp(IN[0] + .95, -.1, f); y = lerp(IN[1], -.15, f) + Math.sin(r * 60) * .03; z = 0; }
+          else { const f = (u - .45) / .55, T = toFee ? FEE : BIG; x = lerp(.1, T[0] - (toFee ? .42 : .88), f); y = lerp(-.15, T[1], f) + Math.sin(r * 60) * .03 * (1 + f); z = 0; }
+          a = (.26 + .3 * Math.sin(u * Math.PI)) * (.5 + .5 * Math.sin(Math.PI * Math.min(1, p * 1.2 + .3))); s = .75; }
+        else { x = A[o] + Math.sin(t * .3 + r * 50) * .1; y = A[o + 1] + Math.cos(t * .27 + r * 40) * .1; z = A[o + 2]; a = .1 + .22 * r; s = .7; }
+        pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s;
+      }
+      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true;
+      grp.rotation.y = sx * .28 + Math.sin(t * .2) * .06; grp.rotation.x = sy * .12;
+      renderer.render(scene, camera);
+      if (on && !reduce) requestAnimationFrame(frame); else running = false;
+    };
+    function kick() { if (running || !on) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
+    new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
+    addEventListener('scroll', kick, { passive: true });
   }
 }
