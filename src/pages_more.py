@@ -10,7 +10,7 @@ PAGES["R-01"] = dict(level=4, template="hub",
     desc="Articles, news and press from Kai: AI agents, money across fiat, crypto and stocks, and company updates.",
     hero=dict(eyebrow="Resources", h1="Resources", sub="Articles, news and press from the Kai team."),
     ui=UI,
-    after=[dict(t="cards", items=[("doc", "Glossary", "Plain definitions of the terms we use.", "/resources/glossary/")], n=3),
+    after=[dict(t="band", dust=False, h2="Glossary", body="Plain definitions of the terms we use.", cta=("Glossary", "/resources/glossary/")),   # banner like Business overview › Business pricing
            dict(t="final", **FINAL)])
 
 PAGES["R-03"] = dict(level=4, template="listing", type="News", per_page=9,

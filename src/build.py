@@ -1026,16 +1026,16 @@ def render_hub(spec):
     by = lambda t: sorted([a for a in ARTICLES if a["type"] == t], key=lambda a: a["date"], reverse=True)
     blog, news, press = by("Blog"), by("News"), by("Press")
     h = spec["hero"]
-    jump = "".join(f'<a href="#{t.lower()}">{t}</a>' for t in ("Blog", "News", "Press"))
-    hero = (f'<section class="rhero"><div class="wrap"><div class="rhero__card" data-tone="dark">'
-            f'<h1>{esc(h["h1"])}</h1><p>{esc(h["sub"])}</p><nav class="rjump" aria-label="Jump to a section">{jump}</nav></div></div></section>')
+    # header exactly like the Blog page's (text header: eyebrow, title, line)
+    hero = s_hero(dict(variant="text", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
     def head(t, url):
         return (f'<div class="rsec__head"><h2>{t}</h2>' + btn("View all", href=url, kind="btn1", cls="btn-soft") + "</div>")
     rm = spec["ui"]["read_more"]
-    blog_html = (f'<section class="rsec" id="blog"><div class="wrap">{head("Blog", "/resources/blog/")}<div class="mag">'
-                 f'{post_card(blog[0], rm, size="lg")}<div class="mag__grid">{"".join(post_card(a, rm, size="sm") for a in blog[1:5])}</div></div></div></section>')
-    news_html = (f'<section class="rsec" id="news"><div class="wrap">{head("News", "/resources/news/")}{post_card(news[0], rm, size="wide")}'
-                 f'<div class="grid3">{"".join(post_card(a, rm) for a in news[1:4])}</div></div></section>')
+    # Blog and News laid out exactly like Press: a row of three cards, up to six
+    blog_html = (f'<section class="rsec" id="blog"><div class="wrap">{head("Blog", "/resources/blog/")}'
+                 f'<div class="grid3">{"".join(post_card(a, rm) for a in blog[:6])}</div></div></section>')
+    news_html = (f'<section class="rsec" id="news"><div class="wrap">{head("News", "/resources/news/")}'
+                 f'<div class="grid3">{"".join(post_card(a, rm) for a in news[:6])}</div></div></section>')
     press_html = (f'<section class="rsec" id="press"><div class="wrap">{head("Press", "/resources/press/")}'
                   f'<div class="grid3">{"".join(post_card(a, rm) for a in press[:6])}</div></div></section>')
     after = "".join(SECTIONS[x["t"]](x, 4) for x in spec.get("after", []))
