@@ -1,3 +1,4 @@
+import re
 #!/usr/bin/env python3
 """Build the Kai pages (everything except the homepage).
 
@@ -1016,7 +1017,9 @@ def render_listing(spec):
     cards = "".join(post_card(a, ui["read_more"], key=key) for a in arts)
     pre = "".join(SECTIONS[x["t"]](x, 4) for x in spec.get("before", []))
     post = "".join(SECTIONS[x["t"]](x, 4) for x in spec.get("after", []))
-    return (s_hero(dict(variant="text", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4) + pre
+    # header like Pricing's: text on the left, a particle scene about this kind of post on the right
+    shape = {"Blog": "pages", "News": "signal", "Press": "press"}.get(spec.get("type"), "articles")
+    return (s_hero(dict(variant="sub", shape=shape, eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4) + pre
             + f'<section class="sec" style="padding-top:0"><div class="wrap">{chips}'
             f'<div class="posts" data-pager="{spec.get("per_page", 9)}" data-prev="{ui["prev"]}" data-next="{ui["next"]}" data-page="{ui["page"]}">{cards}</div>'
             f'<p class="empty" hidden>{esc(ui["empty"])}</p><nav class="pager" aria-label="Pagination" hidden></nav></div></section>' + post)
@@ -1027,9 +1030,10 @@ def render_hub(spec):
     blog, news, press = by("Blog"), by("News"), by("Press")
     h = spec["hero"]
     # header exactly like the Blog page's (text header: eyebrow, title, line)
-    hero = s_hero(dict(variant="text", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
+    # header like Pricing's: text on the left, a particle scene on the right (assets/site/particles.js: "articles")
+    hero = s_hero(dict(variant="sub", shape="articles", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
     jump = "".join(f'<a href="#{t.lower()}">{t}</a>' for t in ("Blog", "News", "Press"))   # the Blog / News / Press tags, under the line
-    hero = hero.replace('</p></div></div></section>', f'</p><nav class="rjump rjump--light" aria-label="Jump to a section">{jump}</nav></div></div></section>', 1)
+    hero = re.sub(r'(<p class="hero__sub"[^>]*>.*?</p>)', lambda m: m.group(1) + f'<nav class="rjump rjump--light" aria-label="Jump to a section">{jump}</nav>', hero, count=1)
     def head(t, url):
         return (f'<div class="rsec__head"><h2>{t}</h2>' + btn("View all", href=url, kind="btn1", cls="btn-soft") + "</div>")
     rm = spec["ui"]["read_more"]

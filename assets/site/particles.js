@@ -7,7 +7,7 @@
    One small WebGL canvas per section; it only renders while the section is on screen. */
 import * as THREE from 'three';
 
-const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'orbits'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
+const hosts = [...document.querySelectorAll('.pglobe')].filter(h => !['stacks', 'prism', 'scale', 'feering', 'receipt', 'orbits', 'articles', 'pages', 'signal', 'press'].includes(h.getAttribute('data-shape')));   // 'stacks' has its own scene (below)
 if (hosts.length) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mob = innerWidth < 760;
@@ -1148,4 +1148,145 @@ if (hosts.length) {
     new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
     addEventListener('scroll', kick, { passive: true });
   }
+}
+
+
+/* Resources headers (hub, Blog, News, Press): one small engine, four scenes, each about its page.
+   articles (Resources hub): a slow carousel of article cards (picture, title, lines of text) turning in space, the
+     one in front lit up.
+   pages (Blog): an open book of specks whose pages turn by themselves every few seconds, lines of writing on them.
+   signal (News): the Kai mark sending out news: rings of light pulsing outwards in 3D and headlines flying off it.
+   press (Press): a studio microphone, sound waves going out to both sides, and now and then a camera flash.
+   All teal specks on the light page, gently turned by the cursor. */
+{
+  const hosts = [...document.querySelectorAll('.pglobe[data-shape="articles"],.pglobe[data-shape="pages"],.pglobe[data-shape="signal"],.pglobe[data-shape="press"]')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760;
+  const R = Math.random, TAU = Math.PI * 2;
+  const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const KAI = (() => { const S = 200, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); g.fillStyle = '#fff';
+    g.translate(S * .08, S * .08); g.scale(S * .84 / 104, S * .84 / 104);
+    ['M43.2773 67.3906C49.2947 66.5932 55.2169 66.4682 61.0439 67.0117V66.9922L61.6895 67.0732C72.8282 68.208 82.4104 71.7968 90.4355 77.8398L75.417 92.374L61.6895 79.1318L61.6875 79.1289V103.032C61.6875 103.678 61.3647 104.002 60.7188 104.002H43.2773C42.6315 104.002 42.3086 103.678 42.3086 103.032V68.3115C42.3086 67.6657 42.6315 67.3584 43.2773 67.3906Z',
+     'M35.6895 42.3115C36.3354 42.3115 36.6427 42.6343 36.6104 43.2803C37.4077 49.297 37.5326 55.2184 36.9893 61.0449H37.0078L36.9336 61.6279C36.9315 61.6487 36.9308 61.6697 36.9287 61.6904H36.9268C35.792 72.8291 32.2032 82.4114 26.1602 90.4365L11.626 75.417L24.8682 61.6904H0.96875C0.323023 61.6904 0.000106046 61.3674 0 60.7217V43.2803C0 42.6344 0.322917 42.3116 0.96875 42.3115H35.6895Z',
+     'M92.374 28.584L79.1318 42.3115H103.031C103.677 42.3116 104 42.6344 104 43.2803V60.7217C104 61.3674 103.677 61.6904 103.031 61.6904H68.3105C67.6647 61.6904 67.3575 61.3674 67.3896 60.7217C66.5923 54.705 66.4675 48.7834 67.0107 42.957H66.9922L67.0654 42.3721C67.0675 42.3519 67.0692 42.3317 67.0713 42.3115H67.0732C68.208 31.1728 71.7968 21.5905 77.8398 13.5654L92.374 28.584Z',
+     'M60.7227 0C61.3684 6.34367e-05 61.6913 0.323029 61.6914 0.96875V35.6904C61.6913 36.3361 61.3684 36.6426 60.7227 36.6104C54.7053 37.4078 48.7831 37.5318 42.9561 36.9883V37.0098L42.3105 36.9287C31.1718 35.794 21.5896 32.2052 13.5645 26.1621L28.583 11.6279L42.3105 24.8701L42.3125 24.8721V0.96875C42.3126 0.322966 42.6354 0 43.2812 0H60.7227Z'
+    ].forEach(d => g.fill(new Path2D(d)));
+    const d = g.getImageData(0, 0, S, S).data, p = []; for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) if (d[(y * S + x) * 4 + 3] > 120) p.push([x / S * 2 - 1, 1 - y / S * 2]); return p; })();
+  // a flat "page" of content: outline, picture block, title bar, text lines. (u, v) in -.5..5 of width w, height h
+  const docPts = (w, h, n, pic = true) => { const out = []; for (let i = 0; i < n; i++) { const t = R(); let u, v, kind = 0;
+      if (t < .3) { const e = R() * 4; if (e < 1) { u = e - .5; v = .5; } else if (e < 2) { u = .5; v = .5 - (e - 1); } else if (e < 3) { u = .5 - (e - 2); v = -.5; } else { u = -.5; v = -.5 + (e - 3); } kind = 1; }
+      else if (pic && t < .5) { u = -.42 + R() * .84; v = .44 - R() * .36; kind = 2; }                                   // picture
+      else if (t < .58) { u = -.42 + R() * .6; v = (pic ? -.02 : .38) + (R() - .5) * .05; kind = 3; }                     // title
+      else { const L = Math.floor(R() * (pic ? 4 : 8)), len = [.84, .78, .84, .5, .84, .7, .84, .4][L]; u = -.42 + R() * len; v = (pic ? -.14 : .24) - L * .1 + (R() - .5) * .025; kind = 4; }
+      out.push([u * w, v * h, kind]); } return out; };
+  const scenes = {
+    articles(k) {
+      const NC = 8, RR = 2.45, W = 1.25, H = 1.65, per = Math.round(900 * k), cards = [];
+      for (let c = 0; c < NC; c++) cards.push(docPts(W, H, per));
+      return { size: 5.7, update(t, put) { const spin = t * .12;
+        for (let c = 0; c < NC; c++) { const a = c / NC * TAU + spin, cx = Math.sin(a) * RR, cz = Math.cos(a) * RR, front = Math.max(0, Math.cos(a)), lit = Math.pow(front, 6);
+          const ca = Math.cos(a), sa = Math.sin(a), bob = Math.sin(t * .8 + c) * .06;
+          for (const q of cards[c]) { const x = cx + q[0] * ca, z = cz - q[0] * sa, y = q[1] + bob;
+            const base = q[2] === 1 ? .7 : q[2] === 2 ? .22 : q[2] === 3 ? .75 : .45;
+            put(x, y, z, base * (.35 + .65 * (.5 + .5 * front)), q[2] === 3 ? 1 : .9, lit * (q[2] === 1 || q[2] === 3 ? .9 : .4)); } } } };
+    },
+    pages(k) {
+      const W = 1.6, H = 2.2, per = Math.round(2600 * k), L = docPts(W, H, per, false), Rp = docPts(W, H, per, false), F = docPts(W, H, Math.round(1600 * k), false);
+      const bend = (x, y, lift) => { const u = x / W; return [x, y, Math.sin(u * Math.PI) * .18 * lift]; };
+      return { size: 4.3, update(t, put) {
+        const cyc = (t % 4.5) / 4.5, flip = sm(.25, .85, cyc);              // one page turns every 4.5 s
+        for (const q of L) { const x = -W / 2 - q[0] * -1 - W / 2 + W / 2, u = (q[0] / W + .5); put(-u * W - .04, q[1], Math.sin(u * Math.PI) * .12, q[2] === 1 ? .6 : q[2] === 3 ? .8 : .5, .9, 0); }
+        for (const q of Rp) { const u = (q[0] / W + .5); put(u * W + .04, q[1], Math.sin(u * Math.PI) * .12, q[2] === 1 ? .6 : q[2] === 3 ? .8 : .5, .9, 0); }
+        const ang = flip * Math.PI;                                           // the turning page swings over the spine
+        for (const q of F) { const u = (q[0] / W + .5), r = u * W, curl = Math.sin(flip * Math.PI) * .35 * u;
+          const a = ang + curl; put(Math.cos(a) * r + .04 * Math.cos(a), q[1], Math.sin(a) * r + .12, (q[2] === 1 ? .7 : q[2] === 3 ? .85 : .55), .95, Math.sin(flip * Math.PI) * .6); }
+        for (let i = 0; i < 260 * k; i++) put(0, (i / (260 * k) - .5) * H, .02, .6, .9, 0);   // the spine
+      } };
+    },
+    signal(k) {
+      const mark = Array.from({ length: Math.round(2400 * k) }, () => KAI[Math.floor(R() * KAI.length)]);
+      const NR = 5, ringN = Math.round(1100 * k), NH = 12, hN = Math.round(120 * k);
+      const heads = Array.from({ length: NH }, () => ({ d: new THREE.Vector3(R() - .5, (R() - .5) * .7, R() - .5).normalize(), ph: R(), len: .3 + R() * .5 }));
+      return { size: 6.2, update(t, put) {
+        const pulse = 1 + Math.sin(t * 2.2) * .03;
+        for (const p of mark) put(p[0] * .7 * pulse, p[1] * .7 * pulse, 0, .9, 1, .5);
+        for (let r = 0; r < NR; r++) { const f = ((t * .28 + r / NR) % 1), rad = .9 + f * 2.4, a = (1 - f) * .6, tilt = .35 + r * .25;
+          for (let i = 0; i < ringN; i++) { const th = i / ringN * TAU; let x = Math.cos(th) * rad, y = Math.sin(th) * rad * .9, z = 0;
+            const c = Math.cos(tilt), s2 = Math.sin(tilt); [y, z] = [y * c - z * s2, y * s2 + z * c]; put(x, y * .6, z, a * .7, .8, (1 - f) * .5); } }
+        for (const h of heads) { const f = (t * .22 + h.ph) % 1, d0 = .9 + f * 2.6;                // headlines flying off
+          for (let i = 0; i < hN; i++) { const u = i / hN, along = d0 + u * h.len; put(h.d.x * along, h.d.y * along + (i % 3 === 0 ? .04 : 0), h.d.z * along, Math.sin(f * Math.PI) * .7, .85, .3); } }
+      } };
+    },
+    press(k) {
+      const head = [], stem = [], waves = [];
+      for (let i = 0; i < 3200 * k; i++) { const t = R(); if (t < .7) { const a = R() * TAU, y = R() * 2 - 1, q = Math.sqrt(1 - y * y), lat = Math.round(y * 6) / 6, gl = Math.abs(y - lat) < .02 || Math.abs((a / TAU * 16) % 1) < .04;
+          if (gl) head.push([q * Math.cos(a) * .62, 1.05 + y * .82, q * Math.sin(a) * .62]); else if (R() < .25) head.push([q * Math.cos(a) * .6, 1.05 + y * .8, q * Math.sin(a) * .6]); }      // grille
+        else { const a = R() * TAU; head.push([Math.cos(a) * .66, .3 + (R() - .5) * .08, Math.sin(a) * .66]); } }                          // collar
+      for (let i = 0; i < 1400 * k; i++) { const t = R(), a = R() * TAU;
+        if (t < .55) { const r = .09; stem.push([Math.cos(a) * r, .2 - R() * 1.9, Math.sin(a) * r]); }                                   // stem
+        else if (t < .8) { const r = .75 * Math.sqrt(R()); stem.push([Math.cos(a) * r, -1.72, Math.sin(a) * r * .45]); }                 // base
+        else { const r = .55 + R() * .03; stem.push([Math.cos(a) * r, -.2 + Math.sin(a) * .5 * 0, Math.sin(a) * r * 0 + 0]); } }           // holder arc (front)
+      return { size: 6.0, update(t, put) {
+        for (const q of head) put(q[0], q[1], q[2], .75, .95, .2);
+        for (const q of stem) put(q[0], q[1], q[2], .65, .9, 0);
+        for (let w = 0; w < 4; w++) { const f = ((t * .35 + w / 4) % 1), rr = .95 + f * 2.1;      // sound going out to both sides
+          for (let side = -1; side <= 1; side += 2) for (let i = 0; i < 220 * k; i++) { const a = (i / (220 * k) - .5) * 1.4;
+            put(side * Math.cos(a) * rr, 1.05 + Math.sin(a) * rr, 0, (1 - f) * .6, .85, (1 - f) * .4); } }
+        const fl = (t % 3.2) / 3.2, flash = Math.max(0, 1 - fl * 6), fx = Math.sin(Math.floor(t / 3.2) * 12.9) * 2.4, fy = 1.6 + Math.cos(Math.floor(t / 3.2) * 7.3) * .5;   // a camera flash
+        for (let i = 0; i < 160 * k; i++) { const a = i / (160 * k) * TAU, rr = (i % 2 ? .1 : .32) * flash; put(fx + Math.cos(a) * rr * 1.6, fy + Math.sin(a) * rr, .3, flash * .9, 1.1, flash); }
+      } };
+    },
+  };
+  hosts.forEach(host => {
+    const kind = host.getAttribute('data-shape'), k = mob ? .5 : 1, S = scenes[kind](k);
+    const N = 26000; const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), hi = new Float32Array(N), seed = new Float32Array(N), from = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { seed[i] = R(); const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 3 + R() * 3; from[i * 3] = rad * q * Math.cos(a) * 1.5; from[i * 3 + 1] = rad * yy; from[i * 3 + 2] = rad * q * Math.sin(a); }
+    const dust = Array.from({ length: Math.round(1300 * k) }, () => [(R() * 2 - 1) * 4.4, (R() * 2 - 1) * 2.8, (R() * 2 - 1) * 1.3]);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
+    g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('aH', new THREE.BufferAttribute(hi, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
+    const U = { uPx: { value: 1 } };
+    const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.NormalBlending,
+      vertexShader: `attribute float aA, aS, aH, rnd; uniform float uPx; varying vec3 vCol; varying float vA;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+          gl_PointSize = uPx * aS * (1.1 + rnd * 1.05) * (10. / -mv.z);
+          vCol = mix(mix(vec3(.04, .17, .19), vec3(.3, .5, .52), fract(rnd * 3.7)), vec3(.03, .36, .4), aH); vA = aA; }`,
+      fragmentShader: `varying vec3 vCol; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
+        gl_FragColor = vec4(vCol, vA * (1. - smoothstep(.08, .25, d))); }` });
+    const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
+    const grp = new THREE.Group(); grp.add(pts); scene.add(grp);
+    let W = 0, H = 0;
+    const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
+      if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
+      camera.position.set(0, .5, 11); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+      const halfH = 11 * Math.tan(THREE.MathUtils.degToRad(15)), halfW = halfH * camera.aspect;
+      grp.scale.setScalar(Math.min(1.5, halfH * 2 * .94 / S.size, halfW * 2 * .94 / S.size));
+      U.uPx.value = Math.min(devicePixelRatio, 2) * (mob ? 1.1 : 1.3); };
+    size(); new ResizeObserver(size).observe(host);
+    const zone = host.closest('section') || host; let mx = 0, my = 0, sx = 0, sy = 0;
+    zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; kick(); });
+    zone.addEventListener('pointerleave', () => { mx = 0; my = 0; });
+    let t = 0, on = false, running = false, last = performance.now(), born = null;
+    const frame = now => {
+      const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
+      if (born === null) born = now; const form = reduce ? 1 : sm(0, 1.8, (now - born) / 1000);
+      sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
+      let n = 0;
+      const put = (x, y, z, a, s, h) => { if (n >= N) return; const o = n * 3;
+        pos[o] = from[o] + (x - from[o]) * form; pos[o + 1] = from[o + 1] + (y - from[o + 1]) * form; pos[o + 2] = from[o + 2] + (z - from[o + 2]) * form;
+        alp[n] = a * (.3 + .7 * form); siz[n] = s; hi[n] = h; n++; };
+      S.update(t, put);
+      for (const q of dust) { const r = seed[n] || .5; put(q[0] + Math.sin(t * .3 + r * 50) * .1, q[1] + Math.cos(t * .27 + r * 40) * .1, q[2], .08 + .18 * r, .7, 0); }
+      for (let i = n; i < N; i++) alp[i] = 0;
+      g.setDrawRange(0, n);
+      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aH.needsUpdate = true;
+      grp.rotation.y = (kind === 'pages' ? -.35 : -.2) + sx * .3 + Math.sin(t * .2) * .06; grp.rotation.x = (kind === 'articles' ? .22 : .1) + sy * .1;
+      renderer.render(scene, camera);
+      if (on && !reduce) requestAnimationFrame(frame); else running = false;
+    };
+    function kick() { if (running || !on) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
+    new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) kick(); }, { rootMargin: '120px 0px' }).observe(host);
+  });
 }
