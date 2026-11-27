@@ -1466,3 +1466,6 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 .rjump--light{justify-content:flex-start;margin-top:calc(var(--u)*24)}
 .rjump--light a{border-color:rgba(4,24,32,.22);color:var(--deep)}
 .rjump--light a:hover{background:var(--deep);color:var(--paper);border-color:var(--deep)}
+
+/* Resources, Blog, News and Press headers share one layout: the row of pills sits under the line, same spacing */
+.chips--hero{margin:calc(var(--u)*24) 0 0}

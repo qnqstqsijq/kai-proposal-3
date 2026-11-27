@@ -1019,8 +1019,11 @@ def render_listing(spec):
     post = "".join(SECTIONS[x["t"]](x, 4) for x in spec.get("after", []))
     # header like Pricing's: text on the left, a particle scene about this kind of post on the right
     shape = {"Blog": "pages", "News": "signal", "Press": "press"}.get(spec.get("type"), "articles")
-    return (s_hero(dict(variant="sub", shape=shape, eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4) + pre
-            + f'<section class="sec" style="padding-top:0"><div class="wrap">{chips}'
+    # same layout as the Resources header: title, line, then the row of pills (here the filters) under the line
+    hero = s_hero(dict(variant="sub", shape=shape, eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
+    hero = re.sub(r'(<p class="hero__sub"[^>]*>.*?</p>)', lambda m: m.group(1) + chips.replace('class="chips"', 'class="chips chips--hero"', 1), hero, count=1)
+    return (hero + pre
+            + f'<section class="sec" style="padding-top:0"><div class="wrap">'
             f'<div class="posts" data-pager="{spec.get("per_page", 9)}" data-prev="{ui["prev"]}" data-next="{ui["next"]}" data-page="{ui["page"]}">{cards}</div>'
             f'<p class="empty" hidden>{esc(ui["empty"])}</p><nav class="pager" aria-label="Pagination" hidden></nav></div></section>' + post)
 
