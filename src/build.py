@@ -1029,6 +1029,7 @@ def render_listing(spec):
     # same layout as the Resources header: title, line, then the row of pills (here the filters) under the line
     hero = s_hero(dict(variant="sub", shape=shape, eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
     hero = re.sub(r'(<p class="hero__sub"[^>]*>.*?</p>)', lambda m: m.group(1) + chips.replace('class="chips"', 'class="chips chips--hero"', 1), hero, count=1)
+    hero = hero.replace('<section class="hero hero--sub"', '<section class="hero hero--sub hero--res"', 1)   # less space above
     return (hero + pre
             + f'<section class="sec" style="padding-top:0"><div class="wrap">'
             f'<div class="posts" data-pager="{spec.get("per_page", 9)}" data-prev="{ui["prev"]}" data-next="{ui["next"]}" data-page="{ui["page"]}">{cards}</div>'
@@ -1044,6 +1045,7 @@ def render_hub(spec):
     hero = s_hero(dict(variant="sub", shape="articles", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
     jump = "".join(f'<a href="#{t.lower()}">{t}</a>' for t in ("Blog", "News", "Press"))   # the Blog / News / Press tags, under the line
     hero = re.sub(r'(<p class="hero__sub"[^>]*>.*?</p>)', lambda m: m.group(1) + f'<nav class="rjump rjump--light" aria-label="Jump to a section">{jump}</nav>', hero, count=1)
+    hero = hero.replace('<section class="hero hero--sub"', '<section class="hero hero--sub hero--res"', 1)   # less space above
     def head(t, url):
         return (f'<div class="rsec__head"><h2>{t}</h2>' + btn("View all", href=url, kind="btn1", cls="btn-soft") + "</div>")
     rm = spec["ui"]["read_more"]

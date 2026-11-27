@@ -1469,3 +1469,8 @@ html body .of-soc__a svg{width:calc(var(--u)*18);height:calc(var(--u)*18);min-wi
 
 /* Resources, Blog, News and Press headers share one layout: the row of pills sits under the line, same spacing */
 .chips--hero{margin:calc(var(--u)*24) 0 0}
+
+/* Resources, Blog, News and Press headers: less space above. The scene is a little shorter and no longer pushes the
+   text down, and the gap under the menu is smaller */
+.hero--res{padding-top:calc(var(--hdr) + clamp(calc(var(--u)*16),2vw,calc(var(--u)*40)));padding-bottom:clamp(calc(var(--u)*32),3vw,calc(var(--u)*56))}
+.hero--res .pglobe--hero{height:clamp(calc(var(--u)*340),32vw,calc(var(--u)*560))!important;margin-block:0}
