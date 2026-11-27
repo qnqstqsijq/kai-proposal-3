@@ -82,7 +82,7 @@ PAGES["H-03"] = dict(level=3,
              buttons=[WAIT],
              # particles in place of the frame: a balance weighs what you send (€) against what arrives (£) plus
              # the fee (%), and settles level (assets/site/particles.js: "scale")
-             shape="scale"),
+             shape="scale", burn=1),
         dict(t="cards", h2="Clear fees. In the open.", items=[
             ("shownfirst", "Shown first", "You see the rate and fees before you confirm."),
             ("everymove", "On every move", "Payments, conversions, card spend and trades show their cost in the flow."),
@@ -120,7 +120,7 @@ PAGES["H-04"] = dict(level=3,
     sections=[
         # pinned header like Business overview: the image fills the screen, then draws back into the frame on the right,
         # where the panel comes in, centred (still for now, video later)
-        dict(t="hero", variant="pin", no_ui=True, video="/assets/media/whykai-hero.mp4", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
+        dict(t="hero", burn=1, variant="pin", no_ui=True, video="/assets/media/whykai-hero.mp4", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
              sub="We're building one place for your money, and the infrastructure through which AI agents act on your behalf. Humans retain control. Agents execute.",
              buttons=[WAIT],
              visual=dict(photo="/assets/media/04-ai-m.jpg", eager=True, title="One balance", chip="Waiting for you",
@@ -168,7 +168,7 @@ PAGES["H-04"] = dict(level=3,
                 ("Agents", "No safe way to let an agent act.", "An agent prepares, and you approve."),
                 ("Control", "Separate logins and limits.", "Permissions, approvals and a log in one place."),
              ], line="Kai platform is being built this way."),
-        dict(t="text", h2="Humans retain control. Agents execute.",
+        dict(t="text", shape="orbits", h2="Humans retain control. Agents execute.",
              body="Every agent works inside limits you set, and nothing sensitive happens without you. You can always use Kai platform yourself, with no agent at all.",
              links=[("See how Kai platform works", "/how-kai-works/")]),
         dict(t="faq", h2="Questions about why Kai", items=[

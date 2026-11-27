@@ -192,7 +192,7 @@ PAGES["B-09"] = dict(level=3,
              buttons=[WAIT, SALES],
              # particles in place of the frame: a receipt printing and curling towards you, every cost on it
              # (assets/site/particles.js: "receipt")
-             shape="receipt"),
+             shape="receipt", burn=1),
         dict(t="plans", h2="Three plans, priced per year.", plans=plans(["€95.88", "€179.88", "€359.88"], ["€179.88", "€119.88", "€0"]),
              line=BIZ_AGENT_LINE),
         dict(t="table", h2="The same plan rates as Personal.",

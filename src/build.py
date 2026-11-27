@@ -266,14 +266,16 @@ VISUALS = {"dashboard": vis_dashboard, "convert": vis_convert, "accounts": vis_a
 # ---------- sections ----------
 def stage_bg(photo=None, clip=None):
     # a people video (the homepage's own clips, taken in turn) with the cube footage laid over it;
-    # or a still in its place, for a frame whose video is still to come
+    # or this frame's own video or still. The turn advances either way, so other pages keep their clips.
+    global _UI_VID
+    if clip or photo:
+        _UI_VID += 1
     if clip:      # this frame's own video
         return (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
                 f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
     if photo:
         return (f'<img class="stage__img" data-par src="{photo}" alt="" loading="lazy" data-photo>'
                 f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
-    global _UI_VID
     clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
     return (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
             f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
@@ -294,7 +296,7 @@ def vis_ui(v, level):
     # as on the homepage UI sections
     global _UI_VID
     if v.get("clip") or v.get("still"):
-        clip = v.get("clip")                              # this frame's own video (or a still, below)
+        clip = v.get("clip"); _UI_VID += 1               # this frame's own video (or a still, below); the turn still advances
     else:
         clip = UI_CLIPS[_UI_VID % len(UI_CLIPS)]; _UI_VID += 1
     first = (f'<img class="stage__img" data-par src="{v["still"]}" alt="" loading="lazy" data-photo>' if v.get("still")   # a still for now, video later
@@ -445,6 +447,8 @@ def s_hero_pin(s, level):
             f'</div></section>')
 
 def s_hero(s, level):
+    global _UI_VID
+    _UI_VID += s.get("burn", 0)      # a header that used to take a clip in turn: keep the turn, so other pages keep their clips
     variant = s.get("variant", "main")
     if variant == "pin":
         return s_hero_pin(s, level)
@@ -614,7 +618,7 @@ STMT_SHAPES = {
     "Private by design": "dust>padlock",
     "Custody and security": "keyparts>shield",
     "The fee is part of the move.": "feering",            # its own scene: the move as a ring, the fee a slice of it
-    "Humans retain control. Agents execute.": "orbits",             # its own scene: agents racing round your control ring
+    "Humans retain control. Agents execute.": "dust>ring",
     "How to apply": "dust>envelope",
     "Follow Kai": "dust>nodes3",
 }
@@ -638,7 +642,7 @@ def s_text(s, level):
         extra += f'<p class="sec-line" style="margin-top:0">{esc(s["line"])}</p>'
     # particle animation tied to the section's content (assets/site/particles.js): the dust starts as one shape and
     # becomes another as you scroll; shapes per heading in STMT_SHAPES, globe to cube for anything not listed
-    shp = STMT_SHAPES.get(s["h2"], "globe>cube")
+    shp = s.get("shape") or STMT_SHAPES.get(s["h2"], "globe>cube")      # a section can name its own scene
     sc = STMT_SCALE.get(s["h2"])
     sca = f' data-scale="{sc}"' if sc else ""
     inner = (f'<div class="stmt"><div class="pglobe" data-shape="{shp}"{sca} aria-hidden="true"></div><div class="stmt__h">{eb}<h2 class="h2"{R(level)}>{esc(s["h2"])}</h2></div>'
@@ -1139,9 +1143,6 @@ def write(url, doc):
         f.write(doc)
     return os.path.relpath(path, ROOT)
 
-# pages reworked with their own videos: no cube overlay on their frames
-NO_OVERLAY = {"B-01", "B-03", "B-09", "P-01", "P-03", "H-03", "H-04"}
-
 def main():
     built = []
     for code, spec in pages.PAGES.items():
@@ -1159,8 +1160,6 @@ def main():
             main_html = render_glossary(spec)
         elif kind == "sitemap":
             main_html = render_sitemap()
-        if code in NO_OVERLAY:      # these pages show their videos and photos clean, with no cube footage laid over them
-            main_html = re.sub(r'<video class="(?:stage|pcard)__cubeo"[^>]*></video>', '', main_html)
         built.append(write(url, shell(url, spec["level"], spec["title"], spec["desc"], main_html)))
     for a in ARTICLES:
         if a["type"] in pages.ARTICLE_TYPES:
