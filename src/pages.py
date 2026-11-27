@@ -15,7 +15,7 @@ PAGES["P-01"] = dict(
     sections=[
         # pinned header like Business overview: the video fills the screen, then draws back into the frame on the right,
         # where the balance panel comes in, centred
-        dict(t="hero", variant="pin", ui_center=True, image="/assets/media/personal-hero.jpg",   # still for now, video later
+        dict(t="hero", variant="pin", ui_center=True, video="/assets/media/personal-hero.mp4",
              eyebrow="Kai Personal", h1="One account for all your money",
              sub="Fiat, crypto, stablecoins, stocks and cards, with one balance. Agents are designed to act for you, within your rules.",
              buttons=[("Become the First", "waitlist")],
@@ -32,7 +32,7 @@ PAGES["P-01"] = dict(
         ]),
         dict(t="split", h2="Hold one thing. Pay with another.",
              body="Hold crypto and pay a bill in euros. The rate and fees are shown before you confirm.",
-             cta=("How Move Money works", "/personal/move-money/"), visual=dict(preset="convert", photo="/assets/media/personal-pay.jpg")),   # still for now, video later
+             cta=("How Move Money works", "/personal/move-money/"), visual=dict(preset="convert", clip="/assets/media/personal-pay.mp4")),
         dict(t="cards2", plain=True, h2="Made for you", items=[            # plain: the photos without the cube footage over them
             ("Kai for crypto natives", "Make your crypto work in the fiat world.", "/personal/crypto-natives/", "/assets/media/personal-crypto.jpg"),
             ("Kai for global professionals", "One account for a life across currencies.", "/personal/global-professionals/", "/assets/media/personal-global.jpg"),

@@ -20,7 +20,7 @@ PAGES["P-03"] = dict(level=3,
             ("shield", "Instant control.", "Freeze and unfreeze a card in one tap."),
         ], line="Later, an agent is designed to spend only within limits you set, and to ask you first."),
         dict(FEES_BAND, dust=False),                             # no dust over this banner
-        dict(t="promos", items=[("Crypto & Stablecoins", "/personal/crypto/", "/assets/media/cards-crypto.jpg"), ("Agents", "/personal/agents/", "/assets/media/cards-agents.jpg")]),   # stills for now, videos later
+        dict(t="promos", items=[("Crypto & Stablecoins", "/personal/crypto/", "/assets/media/cards-crypto.mp4"), ("Agents", "/personal/agents/", "/assets/media/cards-agents.mp4")]),   # stills for now, videos later
         dict(t="final", **FINAL),
     ])
 

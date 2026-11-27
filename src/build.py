@@ -238,8 +238,8 @@ def vis_dashboard(level):
             '<b class="ui__total" data-count="16825.40" data-dec="2" data-pre="€">€16,825.40</b>'
             f'<ul class="ui__rows">{lis}</ul></div></div>')
 
-def vis_convert(level, photo=None):
-    return (f'<div class="stage stage--wide"{R(level, .1)}>' + stage_bg(photo) + f''
+def vis_convert(level, photo=None, clip=None):
+    return (f'<div class="stage stage--wide"{R(level, .1)}>' + stage_bg(photo, clip) + f''
             '<div class="stage__shade"></div>'
             '<div class="ui" data-scrub="conv"><div class="ui__top"><span>Pay a bill</span><span class="ui__chip">Rate shown first</span></div>'
             '<div class="conv" style="margin-top:12px">'
@@ -264,9 +264,12 @@ def vis_accounts(level):
 VISUALS = {"dashboard": vis_dashboard, "convert": vis_convert, "accounts": vis_accounts}
 
 # ---------- sections ----------
-def stage_bg(photo=None):
+def stage_bg(photo=None, clip=None):
     # a people video (the homepage's own clips, taken in turn) with the cube footage laid over it;
     # or a still in its place, for a frame whose video is still to come
+    if clip:      # this frame's own video
+        return (f'<video class="stage__img" data-par src="{clip}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>'
+                f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
     if photo:
         return (f'<img class="stage__img" data-par src="{photo}" alt="" loading="lazy" data-photo>'
                 f'<video class="stage__cubeo" src="{CUBES}" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>')
@@ -343,7 +346,7 @@ def visual(v, level):
     if isinstance(v, str):
         return VISUALS[v](level)
     if isinstance(v, dict) and v.get("preset"):          # a ready-made screen with its own still, e.g. dict(preset="convert", photo=...)
-        return VISUALS[v["preset"]](level, photo=v.get("photo"))
+        return VISUALS[v["preset"]](level, photo=v.get("photo"), clip=v.get("clip"))
     return vis_ui(v, level)
 
 def alink(label, url, cls="lnk", arrow=True):
@@ -923,8 +926,8 @@ def s_promos(s, level):
         vis = hero.get("visual")
         if isinstance(vis, dict):
             vis = {k: v for k, v in vis.items() if k not in ("eager", "float")}
-            if len(it) > 2:
-                vis["still"] = it[2]                          # this page's own still in that frame
+            if len(it) > 2:                                   # this page's own video (or still) in that frame
+                vis["clip" if it[2].endswith(".mp4") else "still"] = it[2]
         out.append(s_split(dict(eyebrow=target["label"], h2=hero["h1"], body=hero.get("sub", ""), visual=vis,
                                 rev=(i % 2 == 1), ctas=[(label, url)]), level))
     return "\n".join(out)
@@ -1136,6 +1139,9 @@ def write(url, doc):
         f.write(doc)
     return os.path.relpath(path, ROOT)
 
+# pages reworked with their own videos: no cube overlay on their frames
+NO_OVERLAY = {"B-01", "B-03", "B-09", "P-01", "P-03", "H-03", "H-04"}
+
 def main():
     built = []
     for code, spec in pages.PAGES.items():
@@ -1153,6 +1159,8 @@ def main():
             main_html = render_glossary(spec)
         elif kind == "sitemap":
             main_html = render_sitemap()
+        if code in NO_OVERLAY:      # these pages show their videos and photos clean, with no cube footage laid over them
+            main_html = re.sub(r'<video class="(?:stage|pcard)__cubeo"[^>]*></video>', '', main_html)
         built.append(write(url, shell(url, spec["level"], spec["title"], spec["desc"], main_html)))
     for a in ARTICLES:
         if a["type"] in pages.ARTICLE_TYPES:

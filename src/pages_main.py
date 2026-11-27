@@ -120,7 +120,7 @@ PAGES["H-04"] = dict(level=3,
     sections=[
         # pinned header like Business overview: the image fills the screen, then draws back into the frame on the right,
         # where the panel comes in, centred (still for now, video later)
-        dict(t="hero", variant="pin", no_ui=True, image="/assets/media/whykai-hero.jpg", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
+        dict(t="hero", variant="pin", no_ui=True, video="/assets/media/whykai-hero.mp4", eyebrow="Why Kai", h1="One account. Built for agents. You approve.",
              sub="We're building one place for your money, and the infrastructure through which AI agents act on your behalf. Humans retain control. Agents execute.",
              buttons=[WAIT],
              visual=dict(photo="/assets/media/04-ai-m.jpg", eager=True, title="One balance", chip="Waiting for you",
@@ -136,7 +136,7 @@ PAGES["H-04"] = dict(level=3,
         ], line=AGENT_LINE),
         # scroll-driven like Business accounts › Receive, hold and move: each step plays its action in the widget
         # (still in the frame for now, video later)
-        dict(t="flow", still="/assets/media/whykai-flow.jpg", h2="The workflow is the point.",   # still for now, video later
+        dict(t="flow", clip="/assets/media/whykai-flow.mp4", h2="The workflow is the point.",
              lead="The point is not a longer list of tools. It is one flow: you set the goal, an agent prepares the move, you see the rate and fees, and you approve.",
              steps=[
                 ("You set the goal", "Pay an approved supplier within budget."),
