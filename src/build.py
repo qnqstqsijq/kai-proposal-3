@@ -1028,6 +1028,8 @@ def render_hub(spec):
     h = spec["hero"]
     # header exactly like the Blog page's (text header: eyebrow, title, line)
     hero = s_hero(dict(variant="text", eyebrow=h["eyebrow"], h1=h["h1"], sub=h["sub"]), 4)
+    jump = "".join(f'<a href="#{t.lower()}">{t}</a>' for t in ("Blog", "News", "Press"))   # the Blog / News / Press tags, under the line
+    hero = hero.replace('</p></div></div></section>', f'</p><nav class="rjump rjump--light" aria-label="Jump to a section">{jump}</nav></div></div></section>', 1)
     def head(t, url):
         return (f'<div class="rsec__head"><h2>{t}</h2>' + btn("View all", href=url, kind="btn1", cls="btn-soft") + "</div>")
     rm = spec["ui"]["read_more"]
