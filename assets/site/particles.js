@@ -562,44 +562,36 @@ if (hosts.length) {
   }
 }
 
-/* Business accounts header: "one account for fiat, crypto and stocks", abstract. Three ribbons of light come in from
-   the left on their own paths, each a slightly different tone, rippling as they go. In the middle they braid together
-   into one, and the one ribbon sweeps round into a wide, slowly turning loop: everything flowing in one place. The light
-   runs along the ribbons all the time. It gathers from dust when the header first shows, follows the cursor a little,
-   and moves into the frame on the right as the header draws back (the frame's progress is read from .phero__art data-k,
-   like the Cards header). Same aqua light as the other dark scenes; the homepage's screen dust floats over everything. */
+/* Business accounts header: "one account for fiat, crypto and stocks", abstract. A wide field of light seen at a low
+   angle, like a calm sea of specks. Three slow sources (the three kinds of money) send rings of waves across it from
+   different places; where they meet, the waves add up into one moving surface, its crests catching the light. It rises
+   out of dust when the header first shows, tilts a little with the cursor, and moves into the frame on the right as the
+   header draws back (the frame's progress is read from .phero__art data-k, like the Cards header). Same aqua light as
+   the other dark scenes; the homepage's screen dust floats over everything. */
 {
   const host = document.querySelector('.paccount');
   if (host) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, mob = innerWidth < 760, R = Math.random, TAU = Math.PI * 2;
     const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const k = mob ? .45 : 1;
-    const PER = Math.round(5200 * k), NLOOP = Math.round(9000 * k);
-    const N = 3 * PER + NLOOP;
-    const lane = new Uint8Array(N), u0 = new Float32Array(N), w0 = new Float32Array(N), seed = new Float32Array(N), dust = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) { lane[i] = i < 3 * PER ? Math.floor(i / PER) : 3; u0[i] = R(); w0[i] = (R() - .5) * (R() < .3 ? 1 : .55); seed[i] = R();
-      const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 2.5 + R() * 3; dust[i * 3] = rad * q * Math.cos(a) * 1.5; dust[i * 3 + 1] = rad * yy; dust[i * 3 + 2] = rad * q * Math.sin(a); }
-    // the three incoming paths: from far left to the braid point, each with its own height, depth and ripple
-    const START = [[-6.2, 1.8, -.7], [-6.4, -.1, .5], [-6.1, -1.9, -.3]], MERGE = [-1.75, 0, 0];   // the braid joins the loop at its left
-    const inPath = (l, u, t) => { const s = START[l], e = 1 - Math.pow(1 - u, 1.6);
-      const x = s[0] + (MERGE[0] - s[0]) * u, y = s[1] * (1 - e) + Math.sin(u * 7 + t * .9 + l * 2) * .22 * (1 - u), z = s[2] * (1 - e) + Math.cos(u * 6 + t * .7 + l) * .18 * (1 - u);
-      return [x, y, z]; };
-    // the loop: one wide ribbon sweeping round, tilted, turning slowly
-    const RL = 1.75;
-    const loopAt = (u, t) => { const a = u * TAU + Math.PI; return [Math.cos(a) * RL, Math.sin(a) * RL * .62, Math.sin(a) * RL * .5 + Math.sin(a * 2 + t * .4) * .12]; };   // u = 0 is the join
+    const GX = mob ? 110 : 190, GZ = mob ? 60 : 100, SX = 11, SZ = 6.5, N = GX * GZ;
+    const bx = new Float32Array(N), bz = new Float32Array(N), seed = new Float32Array(N), dust = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { const gx = i % GX, gz = Math.floor(i / GX); bx[i] = (gx / (GX - 1) - .5) * SX + (R() - .5) * .02; bz[i] = (gz / (GZ - 1) - .5) * SZ + (R() - .5) * .02; seed[i] = R();
+      const a = R() * TAU, yy = R() * 2 - 1, q = Math.sqrt(1 - yy * yy), rad = 2.5 + R() * 3; dust[i * 3] = rad * q * Math.cos(a) * 1.6; dust[i * 3 + 1] = rad * yy; dust[i * 3 + 2] = rad * q * Math.sin(a); }
+    // three sources drifting slowly over the field
+    const SRC = [{ x: -3.2, z: -1.4, ph: 0, f: 2.1 }, { x: 2.6, z: -1.9, ph: 2, f: 2.5 }, { x: .2, z: 1.8, ph: 4, f: 1.9 }];
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0, 0); host.appendChild(renderer.domElement);
-    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(35, 1, .1, 60);
-    const pos = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), tone = new Float32Array(N);
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(38, 1, .1, 60);
+    const pos = new Float32Array(N * 3), alp = new Float32Array(N), tone = new Float32Array(N);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aA', new THREE.BufferAttribute(alp, 1));
-    g.setAttribute('aS', new THREE.BufferAttribute(siz, 1)); g.setAttribute('aT', new THREE.BufferAttribute(tone, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
+    g.setAttribute('aT', new THREE.BufferAttribute(tone, 1)); g.setAttribute('rnd', new THREE.BufferAttribute(seed, 1));
     const U = { uPx: { value: 1 } };
     const mat = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: `attribute float aA, aS, aT, rnd; uniform float uPx; varying vec3 vC; varying float vA;
+      vertexShader: `attribute float aA, aT, rnd; uniform float uPx; varying vec3 vC; varying float vA;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-          gl_PointSize = uPx * aS * (1.05 + rnd * 1.1) * (6.5 / -mv.z);
-          vec3 deep = vec3(.16, .42, .46), aqua = vec3(.5, .86, .9), foam = vec3(.9, 1., 1.);
+          gl_PointSize = uPx * (1.5 + rnd * 1. + aT * 1.6) * (7. / -mv.z);
+          vec3 deep = vec3(.14, .38, .42), aqua = vec3(.5, .86, .9), foam = vec3(.92, 1., 1.);
           vC = aT < .5 ? mix(deep, aqua, aT * 2.) : mix(aqua, foam, aT * 2. - 1.); vA = aA; }`,
       fragmentShader: `varying vec3 vC; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float d = dot(q, q); if (d > .25) discard;
         gl_FragColor = vec4(vC, vA * (1. - smoothstep(.06, .25, d))); }` });
@@ -621,11 +613,10 @@ if (hosts.length) {
     let W = 0, H = 0, A0 = { x: 0, s: 1 }, A1 = { x: 0, s: 1 };
     const size = () => { const r = renderer.domElement.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
       if (w === W && h === H) return; W = w; H = h; renderer.setSize(w, h, false); camera.aspect = w / h;
-      camera.position.set(0, .35, 7); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
-      const halfH = 7 * Math.tan(THREE.MathUtils.degToRad(17.5)), halfW = halfH * camera.aspect, wide = w / h > 1.3;
-      A0 = { x: wide ? halfW * .32 : 0, s: wide ? 1.05 : Math.min(1, w / h) };
-      A1 = { x: wide ? halfW * .5 : 0, s: wide ? .9 : Math.min(1, w / h) };
-      const px = renderer.getPixelRatio(); U.uPx.value = px * (mob ? 1 : 1.15); FU.uPx.value = px; };
+      camera.position.set(0, 4.4, 6.2); camera.lookAt(0, -.7, 0); camera.updateProjectionMatrix();
+      const halfH = 7 * Math.tan(THREE.MathUtils.degToRad(19)), halfW = halfH * camera.aspect, wide = w / h > 1.3;
+      A0 = { x: wide ? halfW * .12 : 0, s: 1.05 }; A1 = { x: wide ? halfW * .5 : 0, s: wide ? .78 : 1 };
+      const px = renderer.getPixelRatio(); U.uPx.value = px * (mob ? 1 : 1.1); FU.uPx.value = px; };
     size(); new ResizeObserver(size).observe(host);
     let mx = 0, my = 0, sx = 0, sy = 0, on = false, t = 0, last = performance.now(), born = null;
     zone.addEventListener('pointermove', e => { const r = zone.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; });
@@ -634,29 +625,23 @@ if (hosts.length) {
     function frame(now) {
       if (!on) return; requestAnimationFrame(frame);
       const dt = Math.min(.05, (now - last) / 1000); last = now; if (!reduce) t += dt;
-      const gather = reduce ? 1 : sm(0, 1.8, (now - born) / 1000);
+      const gather = reduce ? 1 : sm(0, 2, (now - born) / 1000);
       sx += (mx - sx) * Math.min(1, dt * 3); sy += (my - sy) * Math.min(1, dt * 3);
       const kk = art ? +(art.getAttribute('data-k') || 0) : 0;
       holder.position.x = A0.x + (A1.x - A0.x) * kk; holder.scale.setScalar(A0.s + (A1.s - A0.s) * kk);
-      tilt.rotation.y = -.25 + sx * .3 + Math.sin(t * .2) * .05; tilt.rotation.x = .12 + sy * .15;
+      tilt.rotation.y = -.18 + sx * .2 + Math.sin(t * .1) * .05; tilt.rotation.x = sy * .08;
+      const S = SRC.map((q, j) => ({ x: q.x + Math.sin(t * .13 + j * 2) * .6, z: q.z + Math.cos(t * .11 + j) * .4, ph: q.ph, f: q.f }));
       for (let i = 0; i < N; i++) {
-        const o = i * 3, l = lane[i], r = seed[i]; let x, y, z, a, s = 1, tn;
-        if (l < 3) {                                                          // an incoming ribbon, flowing to the braid
-          const u = (u0[i] + t * .07) % 1, p = inPath(l, u, t);
-          const tw = u * 9 + t * .6 + l * 2.1, wd = .22 * (1 - u * .6);         // a flat ribbon that twists as it goes
-          x = p[0]; y = p[1] + Math.cos(tw) * w0[i] * wd; z = p[2] + Math.sin(tw) * w0[i] * wd;
-          const run = Math.max(0, 1 - Math.abs(((u - t * .12) % 1 + 1) % 1 - .5) * 6);   // light running along
-          a = (.28 + .5 * run) * sm(0, .1, u) * (1 - sm(.92, 1, u)); tn = [.25, .5, .75][l] * .7 + run * .4; s = .85 + run * .3; }
-        else {                                                                // the one loop
-          const u = (u0[i] + t * .05) % 1, p = loopAt(u, t), a2 = u * TAU + Math.PI;
-          const tw = a2 * 2 + t * .5, wd = .34;                                // a wide ribbon, folding as it turns
-          x = p[0] + Math.cos(a2) * Math.cos(tw) * w0[i] * wd; y = p[1] + Math.sin(tw) * w0[i] * wd; z = p[2] + Math.sin(a2) * Math.cos(tw) * w0[i] * wd;
-          const run = Math.max(0, 1 - Math.abs(((u - t * .08) % 1 + 1) % 1 - .5) * 5);
-          a = .32 + .55 * run * (.6 + .4 * Math.abs(w0[i]) * 2); tn = .45 + run * .5 + (Math.abs(w0[i]) > .45 ? .15 : 0); s = .9 + run * .35; }
-        if (gather < 1) { x = dust[o] + (x - dust[o]) * gather; y = dust[o + 1] + (y - dust[o + 1]) * gather; z = dust[o + 2] + (z - dust[o + 2]) * gather; a *= .3 + .7 * gather; }
-        pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; alp[i] = a; siz[i] = s; tone[i] = tn;
+        const x = bx[i], z = bz[i], o = i * 3; let h = 0;
+        for (const q of S) { const d = Math.hypot(x - q.x, z - q.z); h += Math.sin(d * q.f - t * 1.1 + q.ph) * .3 / (1 + d * .4); }
+        const edge = sm(SX * .5, SX * .36, Math.abs(x)) * sm(SZ * .5, SZ * .3, Math.abs(z));        // the field fades at its edges
+        const crest = Math.max(0, h) * 2.4;
+        let px = x, py = h - .5, pz = z;
+        if (gather < 1) { px = dust[o] + (px - dust[o]) * gather; py = dust[o + 1] + (py - dust[o + 1]) * gather; pz = dust[o + 2] + (pz - dust[o + 2]) * gather; }
+        pos[o] = px; pos[o + 1] = py; pos[o + 2] = pz;
+        alp[i] = (.3 + .65 * Math.min(1, crest)) * edge * (.35 + .65 * gather); tone[i] = Math.min(1, .25 + crest * .7);
       }
-      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.attributes.aT.needsUpdate = true;
+      g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; g.attributes.aT.needsUpdate = true;
       FU.uTime.value = t; renderer.render(scene, camera);
     }
   }
